@@ -70,6 +70,7 @@ struct ShoppingTripDetailView: View {
                 }
                 .onDelete(perform: removeItems)
             }
+            .onAppear(perform: printItems)
             .navigationTitle(formattedTotal)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -93,6 +94,13 @@ struct ShoppingTripDetailView: View {
         for offset in offsets {
             let item = shoppingItems[offset]
             modelContext.delete(item)
+        }
+    }
+    
+    func printItems() {
+        print("Found items for trip at \(trip.store.name):")
+        for item in trip.items {
+            print("- \(item.item.name) (Qty: \(item.quantity))")
         }
     }
 }

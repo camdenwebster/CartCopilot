@@ -17,12 +17,13 @@ import SwiftUI
 import SwiftData
 
 struct ItemDetailView: View {
+    // Environment and Query properties remain the same
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) var dismiss
     @Query(sort: [SortDescriptor(\Category.name)]) private var categories: [Category]
     @Query(sort: [SortDescriptor(\Store.name)]) private var stores: [Store]
     
-    // Update properties to handle both Item and ShoppingItem scenarios
+    // State properties remain the same
     var shoppingItem: ShoppingItem?
     var item: Item?
     var trip: ShoppingTrip?
@@ -32,148 +33,124 @@ struct ItemDetailView: View {
     @State private var selectedCategory: Category?
     @State private var preferredStore: Store?
     @State private var selectedPhoto: PhotosPickerItem?
+    @State private var isEditMode = false
+    @State private var hasUnsavedChanges = false
+    @State private var showingUnsavedChangesAlert = false
     @FocusState private var isPriceFieldFocused: Bool
     
-    var isShoppingTripItem: Bool
-    var isPresentedAsSheet: Bool
+    let isShoppingTripItem: Bool
+    let isPresentedAsSheet: Bool
     
+    // OriginalValues struct remains the same
+    private struct OriginalValues {
+        let name: String
+        let price: Decimal
+        let category: Category?
+        let store: Store?
+    }
+    
+    @State private var originalValues: OriginalValues?
+    
+    // Computed properties
     private var isEditing: Bool {
         shoppingItem != nil || item != nil
     }
     
-    // Fix: Simplified initializer
-    init(shoppingItem: ShoppingItem? = nil, item: Item? = nil, trip: ShoppingTrip? = nil, isShoppingTripItem: Bool = false, isPresentedAsSheet: Bool = true) {
+    private var isFieldsEnabled: Bool {
+        isPresentedAsSheet || isEditMode
+    }
+    
+    // Initialize with default values
+    init(
+        shoppingItem: ShoppingItem? = nil,
+        item: Item? = nil,
+        trip: ShoppingTrip? = nil,
+        isShoppingTripItem: Bool = false,
+        isPresentedAsSheet: Bool = true
+    ) {
         self.shoppingItem = shoppingItem
         self.item = item
         self.trip = trip
         self.isShoppingTripItem = isShoppingTripItem
         self.isPresentedAsSheet = isPresentedAsSheet
         
-        // Initialize store from trip if available
+        // Handle store initialization separately
         if let tripStore = trip?.store {
             _preferredStore = State(initialValue: tripStore)
         }
     }
     
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section {
-                    if let uiImage = shoppingItem?.item.photo {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                    } else if let uiImage = item?.photo {
-                        Image(uiImage: uiImage)
-                            .resizable()
-                            .scaledToFit()
-                    }
-                    PhotosPicker(selection: $selectedPhoto, matching: .images) {
-                        Label("Select Image", systemImage: "photo")
-                    }
-                }
-                Section {
-                    TextField("Name", text: $name)
+    // Move form content to computed property
+    private var formContent: some View {
+        Form {
+            ItemPhotoSection(
+                shoppingItem: shoppingItem,
+                item: item,
+                selectedPhoto: $selectedPhoto,
+                isEnabled: isFieldsEnabled
+            )
+            
+            ItemBasicInfoSection(
+                name: $name,
+                currentPrice: $currentPrice,
+                isEnabled: isFieldsEnabled
+            )
+            
+            if isShoppingTripItem {
+                Section("Current Trip") {
                     HStack {
-                        Text("Price")
-                            .foregroundStyle(.secondary)
-                        Spacer(minLength: 20)
-                        Text("$")
+                        Text("Quantity")
                             .foregroundStyle(.secondary)
                         Spacer()
-                        TextField("", value: $currentPrice, format: .number)
-                            .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
-                            .focused($isPriceFieldFocused)
-                            .onChange(of: isPriceFieldFocused) { oldValue, newValue in
-                                if newValue && currentPrice == 0 {
-                                    currentPrice = Decimal()
-                                }
-                            }
-                        
+                        Text("\(quantity)")
                     }
-                }
-                if isShoppingTripItem {
-                    Section("Current Trip") {
-                        HStack {
-                            Text("Quantity")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text("\(quantity)")
-                        }
-                        Stepper("", value: $quantity, in: 1...100)
-                    }
-                }
-                Section("Details") {
-                    HStack {
-                        Text("Category")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Picker("", selection: $selectedCategory) {
-                            ForEach(categories) { category in
-                                Text(category.name).tag(category as Category?)
-                            }
-                        }
-                    }
-                    
-                    if !isShoppingTripItem {
-                        HStack {
-                            Text("Preferred Store")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Picker("", selection: $preferredStore) {
-                                ForEach(stores) { store in
-                                    Text(store.name).tag(store as Store?)
-                                }
-                            }
-                        }
-                    }
+                    Stepper("", value: $quantity, in: 1...100)
+                        .disabled(!isFieldsEnabled)
                 }
             }
-            .navigationTitle(isEditing ? "Edit Item" : "New Item")
-            .navigationBarTitleDisplayMode(.inline)
-            .onChange(of: selectedPhoto, loadPhoto)
-            .toolbar {
-                // Only show Cancel button when presented as sheet
-                if isPresentedAsSheet {
-                    ToolbarItem(placement: .topBarLeading) {
-                        Button("Cancel") {
-                            dismiss()
-                        }
-                    }
+            
+            ItemDetailsSection(
+                selectedCategory: $selectedCategory,
+                preferredStore: $preferredStore,
+                categories: categories,
+                stores: stores,
+                isShoppingTripItem: isShoppingTripItem,
+                isEnabled: isFieldsEnabled
+            )
+        }
+    }
+    
+    // Move toolbar content to computed property
+    private var toolbarContent: some ToolbarContent {
+        Group {
+            if isPresentedAsSheet {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Cancel", action: handleDismiss)
                 }
-                
-                ToolbarItem(placement: .topBarTrailing) {
+            } else if isEditing {
+                ToolbarItem(placement: .topBarLeading) {
+                    Button("Back", action: handleDismiss)
+                }
+            }
+            
+            ToolbarItem(placement: .topBarTrailing) {
+                if isPresentedAsSheet {
                     Button("Save") {
                         saveItem()
                         dismiss()
                     }
                     .bold()
-                }
-            }
-            .onAppear {
-                if let existingShoppingItem = shoppingItem {
-                    name = existingShoppingItem.item.name
-                    quantity = existingShoppingItem.quantity
-                    currentPrice = existingShoppingItem.item.currentPrice
-                    selectedCategory = existingShoppingItem.item.category
-                    preferredStore = existingShoppingItem.store
-                } else if let existingItem = item {
-                    // Load item details without shopping item specifics
-                    name = existingItem.name
-                    currentPrice = existingItem.currentPrice
-                    selectedCategory = existingItem.category
-                    preferredStore = existingItem.preferredStore
                 } else {
-                    // Set defaults for new items
-                    if selectedCategory == nil, let firstCategory = categories.first {
-                        selectedCategory = firstCategory
-                    }
-                    if preferredStore == nil {
-                        if let tripStore = trip?.store {
-                            preferredStore = tripStore
-                        } else if let firstStore = stores.first {
-                            preferredStore = firstStore
+                    if isEditMode {
+                        Button("Save") {
+                            saveItem()
+                            isEditMode = false
+                            hasUnsavedChanges = false
+                        }
+                        .bold()
+                    } else {
+                        Button("Edit") {
+                            isEditMode = true
                         }
                     }
                 }
@@ -181,7 +158,91 @@ struct ItemDetailView: View {
         }
     }
     
-    func loadPhoto() {
+    var body: some View {
+        NavigationStack {
+            formContent
+                .navigationTitle(isEditing ? "Edit Item" : "New Item")
+                .navigationBarTitleDisplayMode(.inline)
+                .navigationBarBackButtonHidden(!isPresentedAsSheet)
+                .onChange(of: selectedPhoto) { loadPhoto() }
+                .onChange(of: name) { _ in checkForChanges() }
+                .onChange(of: currentPrice) { _ in checkForChanges() }
+                .onChange(of: selectedCategory) { _ in checkForChanges() }
+                .onChange(of: preferredStore) { _ in checkForChanges() }
+                .onAppear(perform: setupInitialValues)
+                .toolbar { toolbarContent }
+                .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
+                    Button("Discard Changes", role: .destructive) {
+                        if !isPresentedAsSheet {
+                            isEditMode = false
+                        }
+                        hasUnsavedChanges = false
+                        dismiss()
+                    }
+                    Button("Save") {
+                        saveItem()
+                        if !isPresentedAsSheet {
+                            isEditMode = false
+                        }
+                        hasUnsavedChanges = false
+                        dismiss()
+                    }
+                    Button("Cancel", role: .cancel) { }
+                } message: {
+                    Text("Do you want to save your changes before leaving?")
+                }
+                .interactiveDismissDisabled(hasUnsavedChanges)
+        }
+    }
+    
+    // Move setup logic to separate function
+    private func setupInitialValues() {
+        if let existingShoppingItem = shoppingItem {
+            name = existingShoppingItem.item.name
+            quantity = existingShoppingItem.quantity
+            currentPrice = existingShoppingItem.item.currentPrice
+            selectedCategory = existingShoppingItem.item.category
+            preferredStore = existingShoppingItem.store
+            originalValues = OriginalValues(
+                name: name,
+                price: currentPrice,
+                category: selectedCategory,
+                store: preferredStore
+            )
+        } else if let existingItem = item {
+            name = existingItem.name
+            currentPrice = existingItem.currentPrice
+            selectedCategory = existingItem.category
+            preferredStore = existingItem.preferredStore
+            originalValues = OriginalValues(
+                name: name,
+                price: currentPrice,
+                category: selectedCategory,
+                store: preferredStore
+            )
+        } else {
+            if selectedCategory == nil, let firstCategory = categories.first {
+                selectedCategory = firstCategory
+            }
+            if preferredStore == nil {
+                preferredStore = trip?.store ?? stores.first
+            }
+        }
+    }
+    
+    // Your existing functions remain the same
+    private func handleDismiss() {
+        if hasUnsavedChanges {
+            showingUnsavedChangesAlert = true
+        } else {
+            if !isPresentedAsSheet {
+                isEditMode = false
+            }
+            dismiss()
+        }
+    }
+    
+    private func loadPhoto() {
         Task { @MainActor in
             if let data = try await selectedPhoto?.loadTransferable(type: Data.self) {
                 if let shoppingItem = shoppingItem {
@@ -193,26 +254,32 @@ struct ItemDetailView: View {
         }
     }
     
+    private func checkForChanges() {
+        guard let original = originalValues else { return }
+        hasUnsavedChanges = name != original.name ||
+        currentPrice != original.price ||
+        selectedCategory != original.category ||
+        preferredStore != original.store
+    }
+    
+    // Your saveItem function remains the same
     func saveItem() {
         guard let category = selectedCategory else { return }
         guard let store = preferredStore else { return }
         
         do {
             if let existingShoppingItem = shoppingItem {
-                // Update existing shopping item
                 existingShoppingItem.item.name = name
                 existingShoppingItem.quantity = quantity
                 existingShoppingItem.item.currentPrice = currentPrice
                 existingShoppingItem.item.category = category
                 existingShoppingItem.store = store
             } else if let existingItem = item {
-                // Update existing item
                 existingItem.name = name
                 existingItem.currentPrice = currentPrice
                 existingItem.category = category
                 existingItem.preferredStore = store
             } else {
-                // Create new item
                 let newItem = Item(
                     name: name,
                     currentPrice: currentPrice,
@@ -221,10 +288,9 @@ struct ItemDetailView: View {
                 )
                 
                 if isShoppingTripItem {
-                    // Create shopping item only if we're in a shopping trip context
                     modelContext.insert(newItem)
                     print("Successfully saved new Item")
-
+                    
                     let newShoppingItem = try ShoppingItem(
                         item: newItem,
                         quantity: quantity,
@@ -238,7 +304,6 @@ struct ItemDetailView: View {
                         trip.items.append(newShoppingItem)
                     }
                 } else {
-                    // Just save the item without creating a shopping item
                     modelContext.insert(newItem)
                 }
             }
@@ -246,7 +311,6 @@ struct ItemDetailView: View {
             try modelContext.save()
             print("Successfully saved new ShoppingItem")
             
-            // Verify the ShoppingItem was saved and associated with the trip
             if let trip = trip {
                 print("Trip items after save: \(trip.items.count)")
                 let tripItemNames = trip.items.map { $0.item.name }
@@ -260,19 +324,24 @@ struct ItemDetailView: View {
 }
 
 #Preview {
-    let mockCategory = Category(name: "Mock Category", taxRate: 0.0)
-    let mockStore = Store(name: "Mock Store", address: "123 Main street")
-    let mockItem = try? Item(name: "Mock Item", currentPrice: 10.0, category: mockCategory)
-    let mockShoppingItem = try? mockItem.map { item in
-        try ShoppingItem(item: item, store: mockStore)
+    do {
+        let config = ModelConfiguration(isStoredInMemoryOnly: true)
+        let container = try ModelContainer(for: Item.self, ShoppingItem.self, Category.self, Store.self, configurations: config)
+        
+        let context = container.mainContext
+        
+        let category = Category(name: "Test Category", taxRate: 0.08)
+        let store = Store(name: "Test Store", address: "123 Test St")
+        context.insert(category)
+        context.insert(store)
+        try context.save()
+        
+        return ItemDetailView(
+            isShoppingTripItem: true,
+            isPresentedAsSheet: true
+        )
+        .modelContainer(container)
+    } catch {
+        return Text("Preview Error: \(error.localizedDescription)")
     }
-
-    return ItemDetailView(
-        shoppingItem: mockShoppingItem ?? nil,
-        item: nil,
-        trip: nil,
-        isShoppingTripItem: true,
-        isPresentedAsSheet: true
-    )
-    .modelContainer(for: [Item.self, ShoppingItem.self, Category.self, Store.self])
 }

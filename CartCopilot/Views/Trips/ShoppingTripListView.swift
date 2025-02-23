@@ -12,14 +12,13 @@ struct ShoppingTripListView: View {
     @Environment(\.modelContext) var modelContext
     @Query(sort: [SortDescriptor(\ShoppingTrip.date, order: .reverse)]) private var trips: [ShoppingTrip]
     @State private var showingNewTrip = false
+    @State private var selectedTrip: ShoppingTrip?
 
     var body: some View {
         NavigationSplitView {
-            List {
+            List(selection: $selectedTrip) {
                 ForEach(trips) { trip in
-                    NavigationLink {
-                        ShoppingTripDetailView(trip: trip)
-                    } label: {
+                    NavigationLink(value: trip) {
                         VStack(alignment: .leading) {
                             Text(trip.store.name)
                             Text(trip.date, style: .date)
@@ -42,7 +41,17 @@ struct ShoppingTripListView: View {
                 ShoppingTripSettingsView()
             }
         } detail: {
-            Text("Select a Trip")
+            if let trip = selectedTrip {
+                ShoppingTripDetailView(trip: trip)
+            } else {
+                Text("Select a Trip")
+            }
+        }
+        .onAppear {
+            // Select the first trip if none is selected
+            if selectedTrip == nil, let firstTrip = trips.first {
+                selectedTrip = firstTrip
+            }
         }
     }
     
