@@ -51,7 +51,7 @@ struct ShoppingTripDetailView: View {
 //            .frame(maxHeight: 50)
 //        }
         List {
-            ForEach(shoppingItems) { shoppingItem in
+            ForEach(trip.items) { shoppingItem in
                 NavigationLink(value: shoppingItem) {
                     HStack {
                         VStack(alignment: .leading) {
@@ -70,6 +70,7 @@ struct ShoppingTripDetailView: View {
                     }
                 }
             }
+            .onDelete(perform: removeItems)
         }
         .navigationTitle(formattedTotal)
         .navigationBarTitleDisplayMode(.inline)
@@ -82,7 +83,7 @@ struct ShoppingTripDetailView: View {
                 }
             }
         }        .sheet(isPresented: $showingNewItem) {
-            ItemDetailView()
+            ItemDetailView(trip: trip, isShoppingTripItem: true)
         }
     }
     

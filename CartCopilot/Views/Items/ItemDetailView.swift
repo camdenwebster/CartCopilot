@@ -33,7 +33,6 @@ struct ItemDetailView: View {
     @State private var selectedPhoto: PhotosPickerItem?
     @FocusState private var isPriceFieldFocused: Bool
     
-    // Fix: Make this a parameter
     var isShoppingTripItem: Bool
     
     private var isEditing: Bool {
@@ -166,38 +165,61 @@ struct ItemDetailView: View {
         guard let category = selectedCategory else { return }
         guard let store = preferredStore else { return }
         
-        if let existingShoppingItem = shoppingItem {
-            existingShoppingItem.item.name = name
-            existingShoppingItem.quantity = quantity
-            existingShoppingItem.item.currentPrice = currentPrice
-            existingShoppingItem.item.category = category
-            existingShoppingItem.store = store
-        } else {
-            let newItem = Item(
-                name: name,
-                currentPrice: currentPrice,
-                category: category
-            )
-            
-            let newShoppingItem = try? ShoppingItem(
-                item: newItem,
-                quantity: quantity,
-                store: store
-            )
-            
-            if let newShoppingItem = newShoppingItem {
-                // Associate with trip if available
-                if let trip = trip {
-                    newShoppingItem.trip = trip
-                    trip.items.append(newShoppingItem)
-                }
+        do {
+            if let existingShoppingItem = shoppingItem {
+                // Update existing shopping item
+                existingShoppingItem.item.name = name
+                existingShoppingItem.quantity = quantity
+                existingShoppingItem.item.currentPrice = currentPrice
+                existingShoppingItem.item.category = category
+                existingShoppingItem.store = store
+            } else {
+                print("Creating new item for trip: \(String(describing: trip))")
                 
+                // Create new item
+                let newItem = Item(
+                    name: name,
+                    currentPrice: currentPrice,
+                    category: category,
+                    preferredStore: store
+                )
+                
+                // Insert the new item first
                 modelContext.insert(newItem)
+                print("Successfully saved new Item")
+
+                // Create shopping item
+                let newShoppingItem = try ShoppingItem(
+                    item: newItem,
+                    quantity: quantity,
+                    store: store
+                )
+                
+                // Insert the shopping item
                 modelContext.insert(newShoppingItem)
+                
+                // If we have a trip, associate the shopping item with it
+                if let trip = trip {
+                    print("Associating ShoppingItem with trip ID: \(trip.id)")
+                    newShoppingItem.trip = trip
+                    trip.items.append(newShoppingItem)  // Explicitly add to trip's items
+                }
             }
+            
+            // Save the changes
+            try modelContext.save()
+            print("Successfully saved new ShoppingItem")
+            
+            // Verify the ShoppingItem was saved and associated with the trip
+            if let trip = trip {
+                print("Trip items after save: \(trip.items.count)")
+                let tripItemNames = trip.items.map { $0.item.name }
+                print("Items in trip: \(tripItemNames)")
+            }
+            
+        } catch {
+            print("Error saving item: \(error)")
         }
-        
-        try? modelContext.save()
     }
 }
 
