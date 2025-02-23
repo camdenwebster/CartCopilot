@@ -10,6 +10,8 @@ import SwiftUI
 
 class DataBootstrapper {
     static func bootstrapDataIfNeeded(_ modelContext: ModelContext) throws {
+        print("Starting data bootstrap check...")
+        
         // Check if we've already bootstrapped using fetch descriptors
         let storeDescriptor = FetchDescriptor<Store>()
         let categoryDescriptor = FetchDescriptor<Category>()
@@ -17,8 +19,13 @@ class DataBootstrapper {
         let existingStores = try modelContext.fetch(storeDescriptor)
         let existingCategories = try modelContext.fetch(categoryDescriptor)
         
+        print("Found \(existingStores.count) existing stores")
+        print("Found \(existingCategories.count) existing categories")
+        
         // Only bootstrap if we have no data
         if existingStores.isEmpty && existingCategories.isEmpty {
+            print("No existing data found. Starting bootstrap process...")
+            
             // Default stores remain the same
             let stores = [
                 Store(name: "Aldi", address: "", isDefault: true),
@@ -73,12 +80,33 @@ class DataBootstrapper {
                 Category(name: "Other", taxRate: 0.0825, isDefault: true)
             ]
             
+            print("Inserting \(stores.count) stores...")
             // Insert all default data
-            stores.forEach { modelContext.insert($0) }
-            categories.forEach { modelContext.insert($0) }
+            for store in stores {
+                modelContext.insert(store)
+            }
+            
+            print("Inserting \(categories.count) categories...")
+            for category in categories {
+                modelContext.insert(category)
+            }
             
             // Save changes
-            try modelContext.save()
+            do {
+                try modelContext.save()
+                print("Successfully saved bootstrap data")
+                
+                // Verify the data was actually saved
+                let verifyStores = try modelContext.fetch(storeDescriptor)
+                let verifyCategories = try modelContext.fetch(categoryDescriptor)
+                
+                print("Verification: Found \(verifyStores.count) stores and \(verifyCategories.count) categories after bootstrap")
+            } catch {
+                print("Failed to save bootstrap data: \(error)")
+                throw error
+            }
+        } else {
+            print("Bootstrap data already exists. Skipping...")
         }
     }
 }
