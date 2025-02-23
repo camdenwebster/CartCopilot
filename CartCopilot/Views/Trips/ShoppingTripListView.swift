@@ -10,20 +10,30 @@ import SwiftUI
 
 struct ShoppingTripListView: View {
     @Environment(\.modelContext) var modelContext
+    @Environment(\.locale) var locale
     @Query(sort: [SortDescriptor(\ShoppingTrip.date, order: .reverse)]) private var trips: [ShoppingTrip]
     @State private var showingNewTrip = false
     @State private var selectedTrip: ShoppingTrip?
+
+    private var currencyCode: String {
+        locale.currency?.identifier ?? "USD"
+    }
 
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTrip) {
                 ForEach(trips) { trip in
                     NavigationLink(value: trip) {
-                        VStack(alignment: .leading) {
-                            Text(trip.store.name)
-                            Text(trip.date, style: .date)
-                                .font(.caption)
-                                .foregroundColor(.secondary)
+                        HStack {
+                            VStack(alignment: .leading) {
+                                Text(trip.store.name)
+                                Text(trip.date, style: .date)
+                                    .font(.caption)
+                                    .foregroundColor(.secondary)
+                            }
+                            Spacer()
+                            Text(trip.total.formatted(.currency(code: currencyCode)))
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }

@@ -107,11 +107,15 @@ struct ShoppingTripDetailView: View {
 
 extension ShoppingTrip {
     var subtotal: Decimal {
-        items.reduce(Decimal(0)) { $0 + $1.item.currentPrice }
+        items.reduce(Decimal(0)) { total, item in
+            total + (item.item.currentPrice * Decimal(item.quantity))
+        }
     }
 
     var totalTax: Decimal {
-        items.reduce(Decimal(0)) { $0 + ($1.item.currentPrice * Decimal($1.item.category.taxRate)) }
+        items.reduce(Decimal(0)) { total, item in
+            total + (item.item.currentPrice * Decimal(item.quantity) * Decimal(item.item.category.taxRate))
+        }
     }
 
     var total: Decimal {
