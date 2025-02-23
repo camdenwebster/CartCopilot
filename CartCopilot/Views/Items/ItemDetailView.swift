@@ -332,8 +332,8 @@ struct ItemDetailView: View {
             )
         } else {
             currentPrice = nil
-            if selectedCategory == nil, let firstCategory = categories.first {
-                selectedCategory = firstCategory
+            if selectedCategory == nil {
+                selectedCategory = categories.first(where: { $0.name == "Other" }) ?? categories.first
             }
             if preferredStore == nil {
                 preferredStore = trip?.store ?? stores.first
@@ -378,23 +378,25 @@ struct ItemDetailView: View {
         guard let category = selectedCategory else { return }
         guard let store = preferredStore else { return }
         
+        // Set name to "Untitled" if empty
+        let itemName = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : name
         let price = currentPrice ?? Decimal()
         
         do {
             if let existingShoppingItem = shoppingItem {
-                existingShoppingItem.item.name = name
+                existingShoppingItem.item.name = itemName
                 existingShoppingItem.quantity = quantity
                 existingShoppingItem.item.currentPrice = price
                 existingShoppingItem.item.category = category
                 existingShoppingItem.store = store
             } else if let existingItem = item {
-                existingItem.name = name
+                existingItem.name = itemName
                 existingItem.currentPrice = price
                 existingItem.category = category
                 existingItem.preferredStore = store
             } else {
                 let newItem = Item(
-                    name: name,
+                    name: itemName,
                     currentPrice: price,
                     category: category,
                     preferredStore: store

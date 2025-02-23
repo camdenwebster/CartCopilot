@@ -115,7 +115,7 @@ struct ShoppingTripDetailView: View {
                 }
             }
             .onAppear(perform: printItems)
-            .navigationTitle(formattedTotal)
+            .navigationTitle("\(trip.store.name) total: \(formattedTotal)")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
