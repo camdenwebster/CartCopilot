@@ -11,7 +11,7 @@ import SwiftUI
 struct ShoppingTripSettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
-    @Query private var stores: [Store]
+    @Query(sort: [SortDescriptor(\Store.name)]) private var stores: [Store]
     @State private var selectedStore: Store?
     @State private var navigateToList = false
 

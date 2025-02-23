@@ -40,35 +40,83 @@ struct ShoppingTripDetailView: View {
         trip.total.formatted(.currency(code: currencyCode))
     }
 
+    struct CategoryTotal: Identifiable {
+        let id = UUID()
+        let category: Category
+        let subtotal: Decimal
+        let tax: Decimal
+        
+        var total: Decimal {
+            subtotal + tax
+        }
+    }
+
+    private var categoryTotals: [CategoryTotal] {
+        let categories = Set(trip.items.map { $0.item.category })
+        return categories.map { category in
+            let items = trip.items.filter { $0.item.category.id == category.id }
+            let subtotal = items.reduce(Decimal(0)) { total, item in
+                total + (item.item.currentPrice * Decimal(item.quantity))
+            }
+            let tax = items.reduce(Decimal(0)) { total, item in
+                total + (item.item.currentPrice * Decimal(item.quantity) * Decimal(item.item.category.taxRate))
+            }
+            return CategoryTotal(category: category, subtotal: subtotal, tax: tax)
+        }.sorted { $0.category.name < $1.category.name }
+    }
+    
     var body: some View {
         NavigationStack {
-            List {
-                ForEach(trip.items) { shoppingItem in
-                    NavigationLink {
-                        ItemDetailView(shoppingItem: shoppingItem,
-                                       trip: trip,
-                                       isShoppingTripItem: true,
-                                       isPresentedAsSheet: false
-                        )
-                    } label: {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(shoppingItem.item.name)
-                                Text(shoppingItem.item.category.name)
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+            VStack(spacing: 0) {
+                // Category totals section
+                if !categoryTotals.isEmpty {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 16) {
+                            ForEach(categoryTotals) { categoryTotal in
+                                VStack(alignment: .leading) {
+                                    Text(categoryTotal.category.name)
+                                        .font(.subheadline)
+                                        .foregroundStyle(.secondary)
+                                    Text(categoryTotal.total.formatted(.currency(code: currencyCode)))
+                                        .font(.headline)
+                                }
+                                .frame(minWidth: 100)
                             }
-                            Spacer()
-                            VStack(alignment: .trailing) {
-                                Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
-                                Text("Qty: \(shoppingItem.quantity)")
-                                    .font(.caption)
-                                    .foregroundStyle(.secondary)
+                        }
+                        .padding()
+                    }
+                    .background(.regularMaterial)
+                }
+                
+                // Your existing List
+                List {
+                    ForEach(trip.items) { shoppingItem in
+                        NavigationLink {
+                            ItemDetailView(shoppingItem: shoppingItem,
+                                         trip: trip,
+                                         isShoppingTripItem: true,
+                                         isPresentedAsSheet: false
+                            )
+                        } label: {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(shoppingItem.item.name)
+                                    Text(shoppingItem.item.category.name)
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
+                                Spacer()
+                                VStack(alignment: .trailing) {
+                                    Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
+                                    Text("Qty: \(shoppingItem.quantity)")
+                                        .font(.caption)
+                                        .foregroundStyle(.secondary)
+                                }
                             }
                         }
                     }
+                    .onDelete(perform: removeItems)
                 }
-                .onDelete(perform: removeItems)
             }
             .onAppear(perform: printItems)
             .navigationTitle(formattedTotal)
@@ -84,7 +132,7 @@ struct ShoppingTripDetailView: View {
             }
             .sheet(isPresented: $showingNewItem) {
                 ItemDetailView(trip: trip, isShoppingTripItem: true,
-                    isPresentedAsSheet: true
+                              isPresentedAsSheet: true
                 )
             }
         }

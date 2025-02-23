@@ -18,6 +18,7 @@ final class ShoppingItem: PriceCalculatable {
     var item: Item
     var quantity: Int
     var store: Store
+    var dateAdded: Date
     @Relationship(inverse: \ShoppingTrip.items) var trip: ShoppingTrip?
     
     var currentPrice: Decimal {
@@ -43,7 +44,7 @@ final class ShoppingItem: PriceCalculatable {
         quantity = newQuantity
     }
     
-    init(item: Item, quantity: Int = 1, store: Store, trip: ShoppingTrip? = nil) throws {
+    init(item: Item, quantity: Int = 1, store: Store, dateAdded: Date = Date(), trip: ShoppingTrip? = nil) throws {
         guard quantity > 0 else {
             throw ShoppingItemError.invalidQuantity
         }
@@ -51,6 +52,7 @@ final class ShoppingItem: PriceCalculatable {
         self.item = item
         self.quantity = quantity
         self.store = store
+        self.dateAdded = dateAdded
         self.trip = trip
     }
 }

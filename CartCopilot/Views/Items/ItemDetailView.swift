@@ -120,6 +120,92 @@ struct ItemDetailView: View {
         }
     }
     
+    private struct ItemBasicInfoSection: View {
+        @Binding var name: String
+        @Binding var currentPrice: Decimal
+        let isEnabled: Bool
+        @FocusState private var isPriceFieldFocused: Bool
+        
+        private var currencySymbol: String {
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .currency
+            formatter.locale = .current
+            return formatter.currencySymbol
+        }
+        
+        var body: some View {
+            Section {
+                TextField("Item Name", text: $name)
+                    .disabled(!isEnabled)
+                
+                HStack(spacing: 2) {
+                    Text(currencySymbol)
+                        .foregroundStyle(.secondary)
+                    TextField("",
+                             value: $currentPrice,
+                             format: .number)
+                        .foregroundColor(currentPrice == 0 ? .gray : .primary)
+                        .placeholder(when: currentPrice == 0) {
+                            Text("0.00")
+                                .foregroundColor(.gray)
+                        }
+                        .keyboardType(.decimalPad)
+                        .focused($isPriceFieldFocused)
+                        .disabled(!isEnabled)
+                }
+            } header: {
+                Text("Basic Info")
+            }
+        }
+    }
+
+    private struct ItemDetailsSection: View {
+        @Binding var selectedCategory: Category?
+        @Binding var preferredStore: Store?
+        let categories: [Category]
+        let stores: [Store]
+        let isShoppingTripItem: Bool
+        let isEnabled: Bool
+        
+        var body: some View {
+            Section {
+                if isEnabled {
+                    Picker("Category", selection: $selectedCategory) {
+                        ForEach(categories) { category in
+                            Text(category.name).tag(Optional(category))
+                        }
+                    }
+                    
+                    if !isShoppingTripItem {
+                        Picker("Preferred Store", selection: $preferredStore) {
+                            ForEach(stores) { store in
+                                Text(store.name).tag(Optional(store))
+                            }
+                        }
+                    }
+                } else {
+                    HStack {
+                        Text("Category")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(selectedCategory?.name ?? "None")
+                    }
+                    
+                    if !isShoppingTripItem {
+                        HStack {
+                            Text("Preferred Store")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Text(preferredStore?.name ?? "None")
+                        }
+                    }
+                }
+            } header: {
+                Text("Details")
+            }
+        }
+    }
+
     // Move toolbar content to computed property
     private var toolbarContent: some ToolbarContent {
         Group {
@@ -319,6 +405,19 @@ struct ItemDetailView: View {
             
         } catch {
             print("Error saving item: \(error)")
+        }
+    }
+}
+
+extension View {
+    func placeholder<Content: View>(
+        when shouldShow: Bool,
+        alignment: Alignment = .leading,
+        @ViewBuilder placeholder: () -> Content
+    ) -> some View {
+        ZStack(alignment: alignment) {
+            placeholder().opacity(shouldShow ? 1 : 0)
+            self
         }
     }
 }
