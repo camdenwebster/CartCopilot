@@ -20,7 +20,7 @@ struct MainTabView: View {
                 }
             SettingsView()
                 .tabItem {
-                    Label("Settings", systemImage: "gear")
+                    Label("Settings", systemImage: "gearshape")
                 }
         }
     }

@@ -16,14 +16,6 @@ struct ShoppingTripDetailView: View {
     @State private var showingNewItem = false
     @State private var selectedShoppingItem: ShoppingItem?
 
-    var shoppingItems: [ShoppingItem] {
-        trip.items
-    }
-
-    init(trip: ShoppingTrip) {
-        self.trip = trip
-    }
-
     private var currencyCode: String {
         locale.currency?.identifier ?? "USD"
     }
@@ -65,6 +57,10 @@ struct ShoppingTripDetailView: View {
         }.sorted { $0.category.name < $1.category.name }
     }
     
+    init(trip: ShoppingTrip) {
+        self.trip = trip
+    }
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -90,7 +86,7 @@ struct ShoppingTripDetailView: View {
                 
                 // Your existing List
                 List {
-                    ForEach(trip.items) { shoppingItem in
+                    ForEach(trip.items.sorted { $0.dateAdded > $1.dateAdded }) { shoppingItem in
                         NavigationLink {
                             ItemDetailView(shoppingItem: shoppingItem,
                                          trip: trip,
@@ -120,7 +116,6 @@ struct ShoppingTripDetailView: View {
             }
             .onAppear(perform: printItems)
             .navigationTitle(formattedTotal)
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Button {
@@ -139,8 +134,9 @@ struct ShoppingTripDetailView: View {
     }
 
     func removeItems(at offsets: IndexSet) {
+        let sortedItems = trip.items.sorted { $0.dateAdded > $1.dateAdded }
         for offset in offsets {
-            let item = shoppingItems[offset]
+            let item = sortedItems[offset]
             modelContext.delete(item)
         }
     }

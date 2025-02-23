@@ -29,7 +29,7 @@ struct ItemDetailView: View {
     var trip: ShoppingTrip?
     @State private var name = ""
     @State private var quantity = 1
-    @State private var currentPrice = Decimal()
+    @State private var currentPrice: Decimal?
     @State private var selectedCategory: Category?
     @State private var preferredStore: Store?
     @State private var selectedPhoto: PhotosPickerItem?
@@ -122,9 +122,10 @@ struct ItemDetailView: View {
     
     private struct ItemBasicInfoSection: View {
         @Binding var name: String
-        @Binding var currentPrice: Decimal
+        @Binding var currentPrice: Decimal?
         let isEnabled: Bool
         @FocusState private var isPriceFieldFocused: Bool
+        @State private var priceString = "" // Add this for string-based price input
         
         private var currencySymbol: String {
             let formatter = NumberFormatter()
@@ -141,17 +142,40 @@ struct ItemDetailView: View {
                 HStack(spacing: 2) {
                     Text(currencySymbol)
                         .foregroundStyle(.secondary)
-                    TextField("",
-                             value: $currentPrice,
-                             format: .number)
-                        .foregroundColor(currentPrice == 0 ? .gray : .primary)
-                        .placeholder(when: currentPrice == 0) {
+                    ZStack(alignment: .leading) {
+                        // Replace Decimal TextField with string-based TextField
+                        TextField("", text: $priceString)
+                            .keyboardType(.decimalPad)
+                            .focused($isPriceFieldFocused)
+                            .disabled(!isEnabled)
+                            .foregroundColor(.primary)
+                            .onChange(of: priceString) {
+                                // Convert string to Decimal when the user types
+                                if let decimal = Decimal(string: priceString) {
+                                    currentPrice = decimal
+                                } else if priceString.isEmpty {
+                                    currentPrice = nil
+                                }
+                            }
+                            .onAppear {
+                                // Initialize priceString from currentPrice if it exists
+                                if let price = currentPrice {
+                                    let formatter = NumberFormatter()
+                                    formatter.numberStyle = .decimal
+                                    formatter.minimumFractionDigits = 2
+                                    formatter.maximumFractionDigits = 2
+                                    if let str = formatter.string(from: NSDecimalNumber(decimal: price)) {
+                                        priceString = str
+                                    }
+                                }
+                            }
+                        
+                        if priceString.isEmpty && !isPriceFieldFocused {
                             Text("0.00")
                                 .foregroundColor(.gray)
+                                .allowsHitTesting(false)
                         }
-                        .keyboardType(.decimalPad)
-                        .focused($isPriceFieldFocused)
-                        .disabled(!isEnabled)
+                    }
                 }
             } header: {
                 Text("Basic Info")
@@ -291,7 +315,7 @@ struct ItemDetailView: View {
             preferredStore = existingShoppingItem.store
             originalValues = OriginalValues(
                 name: name,
-                price: currentPrice,
+                price: currentPrice ?? Decimal(),
                 category: selectedCategory,
                 store: preferredStore
             )
@@ -302,11 +326,12 @@ struct ItemDetailView: View {
             preferredStore = existingItem.preferredStore
             originalValues = OriginalValues(
                 name: name,
-                price: currentPrice,
+                price: currentPrice ?? Decimal(),
                 category: selectedCategory,
                 store: preferredStore
             )
         } else {
+            currentPrice = nil
             if selectedCategory == nil, let firstCategory = categories.first {
                 selectedCategory = firstCategory
             }
@@ -343,7 +368,7 @@ struct ItemDetailView: View {
     private func checkForChanges() {
         guard let original = originalValues else { return }
         hasUnsavedChanges = name != original.name ||
-        currentPrice != original.price ||
+        (currentPrice ?? Decimal()) != original.price ||
         selectedCategory != original.category ||
         preferredStore != original.store
     }
@@ -353,22 +378,24 @@ struct ItemDetailView: View {
         guard let category = selectedCategory else { return }
         guard let store = preferredStore else { return }
         
+        let price = currentPrice ?? Decimal()
+        
         do {
             if let existingShoppingItem = shoppingItem {
                 existingShoppingItem.item.name = name
                 existingShoppingItem.quantity = quantity
-                existingShoppingItem.item.currentPrice = currentPrice
+                existingShoppingItem.item.currentPrice = price
                 existingShoppingItem.item.category = category
                 existingShoppingItem.store = store
             } else if let existingItem = item {
                 existingItem.name = name
-                existingItem.currentPrice = currentPrice
+                existingItem.currentPrice = price
                 existingItem.category = category
                 existingItem.preferredStore = store
             } else {
                 let newItem = Item(
                     name: name,
-                    currentPrice: currentPrice,
+                    currentPrice: price,
                     category: category,
                     preferredStore: store
                 )
@@ -405,19 +432,6 @@ struct ItemDetailView: View {
             
         } catch {
             print("Error saving item: \(error)")
-        }
-    }
-}
-
-extension View {
-    func placeholder<Content: View>(
-        when shouldShow: Bool,
-        alignment: Alignment = .leading,
-        @ViewBuilder placeholder: () -> Content
-    ) -> some View {
-        ZStack(alignment: alignment) {
-            placeholder().opacity(shouldShow ? 1 : 0)
-            self
         }
     }
 }

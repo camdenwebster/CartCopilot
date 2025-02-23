@@ -22,7 +22,11 @@ struct ItemListView: View {
     }
     
     var groupedItems: [String: [Item]] {
-        Dictionary(grouping: filteredItems) { $0.category.name }
+        let grouped = Dictionary(grouping: filteredItems) { $0.category.name }
+        // Create a new dictionary with sorted arrays
+        return grouped.mapValues { items in
+            items.sorted { $0.name < $1.name }
+        }
     }
     
     var sortedCategories: [String] {
