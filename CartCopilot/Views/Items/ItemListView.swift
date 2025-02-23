@@ -36,7 +36,15 @@ struct ItemListView: View {
                     Section(categoryName) {
                         if let itemsInCategory = groupedItems[categoryName] {
                             ForEach(itemsInCategory) { item in
-                                ItemRow(item: item)
+                                NavigationLink {
+                                    ItemDetailView(
+                                        item: item,
+                                        isShoppingTripItem: false,
+                                        isPresentedAsSheet: false
+                                    )
+                                } label: {
+                                    ItemRow(item: item)
+                                }
                             }
                             .onDelete(perform: deleteItem)
                         }
@@ -55,7 +63,10 @@ struct ItemListView: View {
             }
         }
         .sheet(isPresented: $showingNewItem) {
-            ItemDetailView(isShoppingTripItem: false)
+            ItemDetailView(
+                isShoppingTripItem: false,
+                isPresentedAsSheet: true
+            )
         }
     }
     

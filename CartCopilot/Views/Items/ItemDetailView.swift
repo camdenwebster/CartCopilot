@@ -22,8 +22,9 @@ struct ItemDetailView: View {
     @Query(sort: [SortDescriptor(\Category.name)]) private var categories: [Category]
     @Query(sort: [SortDescriptor(\Store.name)]) private var stores: [Store]
     
-    // If item is nil, we're creating a new item
+    // Update properties to handle both Item and ShoppingItem scenarios
     var shoppingItem: ShoppingItem?
+    var item: Item?
     var trip: ShoppingTrip?
     @State private var name = ""
     @State private var quantity = 1
@@ -34,16 +35,24 @@ struct ItemDetailView: View {
     @FocusState private var isPriceFieldFocused: Bool
     
     var isShoppingTripItem: Bool
+    var isPresentedAsSheet: Bool
     
     private var isEditing: Bool {
-        shoppingItem != nil
+        shoppingItem != nil || item != nil
     }
     
     // Fix: Simplified initializer
-    init(shoppingItem: ShoppingItem? = nil, trip: ShoppingTrip? = nil, isShoppingTripItem: Bool = false) {
+    init(shoppingItem: ShoppingItem? = nil, item: Item? = nil, trip: ShoppingTrip? = nil, isShoppingTripItem: Bool = false, isPresentedAsSheet: Bool = true) {
         self.shoppingItem = shoppingItem
+        self.item = item
         self.trip = trip
         self.isShoppingTripItem = isShoppingTripItem
+        self.isPresentedAsSheet = isPresentedAsSheet
+        
+        // Initialize store from trip if available
+        if let tripStore = trip?.store {
+            _preferredStore = State(initialValue: tripStore)
+        }
     }
     
     var body: some View {
@@ -51,6 +60,10 @@ struct ItemDetailView: View {
             Form {
                 Section {
                     if let uiImage = shoppingItem?.item.photo {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFit()
+                    } else if let uiImage = item?.photo {
                         Image(uiImage: uiImage)
                             .resizable()
                             .scaledToFit()
@@ -103,13 +116,15 @@ struct ItemDetailView: View {
                         }
                     }
                     
-                    HStack {
-                        Text("Preferred Store")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Picker("", selection: $preferredStore) {
-                            ForEach(stores) { store in
-                                Text(store.name).tag(store as Store?)
+                    if !isShoppingTripItem {
+                        HStack {
+                            Text("Preferred Store")
+                                .foregroundStyle(.secondary)
+                            Spacer()
+                            Picker("", selection: $preferredStore) {
+                                ForEach(stores) { store in
+                                    Text(store.name).tag(store as Store?)
+                                }
                             }
                         }
                     }
@@ -119,9 +134,12 @@ struct ItemDetailView: View {
             .navigationBarTitleDisplayMode(.inline)
             .onChange(of: selectedPhoto, loadPhoto)
             .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Cancel") {
-                        dismiss()
+                // Only show Cancel button when presented as sheet
+                if isPresentedAsSheet {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
                     }
                 }
                 
@@ -140,13 +158,23 @@ struct ItemDetailView: View {
                     currentPrice = existingShoppingItem.item.currentPrice
                     selectedCategory = existingShoppingItem.item.category
                     preferredStore = existingShoppingItem.store
+                } else if let existingItem = item {
+                    // Load item details without shopping item specifics
+                    name = existingItem.name
+                    currentPrice = existingItem.currentPrice
+                    selectedCategory = existingItem.category
+                    preferredStore = existingItem.preferredStore
                 } else {
-                    // Set the first store as the preferred store if it's nil
-                    if preferredStore == nil, let firstStore = stores.first {
-                        preferredStore = firstStore
-                    }
+                    // Set defaults for new items
                     if selectedCategory == nil, let firstCategory = categories.first {
                         selectedCategory = firstCategory
+                    }
+                    if preferredStore == nil {
+                        if let tripStore = trip?.store {
+                            preferredStore = tripStore
+                        } else if let firstStore = stores.first {
+                            preferredStore = firstStore
+                        }
                     }
                 }
             }
@@ -156,7 +184,11 @@ struct ItemDetailView: View {
     func loadPhoto() {
         Task { @MainActor in
             if let data = try await selectedPhoto?.loadTransferable(type: Data.self) {
-                shoppingItem?.item.updatePhotoData(data)
+                if let shoppingItem = shoppingItem {
+                    shoppingItem.item.updatePhotoData(data)
+                } else if let item = item {
+                    item.updatePhotoData(data)
+                }
             }
         }
     }
@@ -173,9 +205,13 @@ struct ItemDetailView: View {
                 existingShoppingItem.item.currentPrice = currentPrice
                 existingShoppingItem.item.category = category
                 existingShoppingItem.store = store
+            } else if let existingItem = item {
+                // Update existing item
+                existingItem.name = name
+                existingItem.currentPrice = currentPrice
+                existingItem.category = category
+                existingItem.preferredStore = store
             } else {
-                print("Creating new item for trip: \(String(describing: trip))")
-                
                 // Create new item
                 let newItem = Item(
                     name: name,
@@ -184,29 +220,29 @@ struct ItemDetailView: View {
                     preferredStore: store
                 )
                 
-                // Insert the new item first
-                modelContext.insert(newItem)
-                print("Successfully saved new Item")
+                if isShoppingTripItem {
+                    // Create shopping item only if we're in a shopping trip context
+                    modelContext.insert(newItem)
+                    print("Successfully saved new Item")
 
-                // Create shopping item
-                let newShoppingItem = try ShoppingItem(
-                    item: newItem,
-                    quantity: quantity,
-                    store: store
-                )
-                
-                // Insert the shopping item
-                modelContext.insert(newShoppingItem)
-                
-                // If we have a trip, associate the shopping item with it
-                if let trip = trip {
-                    print("Associating ShoppingItem with trip ID: \(trip.id)")
-                    newShoppingItem.trip = trip
-                    trip.items.append(newShoppingItem)  // Explicitly add to trip's items
+                    let newShoppingItem = try ShoppingItem(
+                        item: newItem,
+                        quantity: quantity,
+                        store: store
+                    )
+                    
+                    modelContext.insert(newShoppingItem)
+                    
+                    if let trip = trip {
+                        newShoppingItem.trip = trip
+                        trip.items.append(newShoppingItem)
+                    }
+                } else {
+                    // Just save the item without creating a shopping item
+                    modelContext.insert(newItem)
                 }
             }
             
-            // Save the changes
             try modelContext.save()
             print("Successfully saved new ShoppingItem")
             
@@ -231,6 +267,12 @@ struct ItemDetailView: View {
         try ShoppingItem(item: item, store: mockStore)
     }
 
-    return ItemDetailView(shoppingItem: mockShoppingItem ?? nil, trip: nil, isShoppingTripItem: true)
-        .modelContainer(for: [Item.self, ShoppingItem.self, Category.self, Store.self])
+    return ItemDetailView(
+        shoppingItem: mockShoppingItem ?? nil,
+        item: nil,
+        trip: nil,
+        isShoppingTripItem: true,
+        isPresentedAsSheet: true
+    )
+    .modelContainer(for: [Item.self, ShoppingItem.self, Category.self, Store.self])
 }
