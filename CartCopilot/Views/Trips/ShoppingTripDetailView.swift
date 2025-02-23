@@ -70,7 +70,10 @@ struct ShoppingTripDetailView: View {
         @Query(sort: [SortDescriptor(\Item.name)]) private var items: [Item]
         
         private var groupedItems: [String: [Item]] {
-            Dictionary(grouping: items) { $0.category.name }
+            Dictionary(grouping: items.filter { item in
+                // Filter items that either have no preferred store or match the trip's store
+                item.preferredStore == nil || item.preferredStore?.id == trip.store.id
+            }) { $0.category.name }
         }
         
         private var sortedCategories: [String] {
@@ -126,6 +129,11 @@ struct ShoppingTripDetailView: View {
         private func addSelectedItems() {
             for item in selectedItems {
                 do {
+                    // If the item has no preferred store, set it to the trip's store
+                    if item.preferredStore == nil {
+                        item.preferredStore = trip.store
+                    }
+                    
                     let shoppingItem = try ShoppingItem(
                         item: item,
                         quantity: 1,

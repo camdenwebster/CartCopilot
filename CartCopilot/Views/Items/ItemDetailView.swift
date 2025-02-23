@@ -31,7 +31,7 @@ struct ItemDetailView: View {
     @State private var quantity = 1
     @State private var currentPrice: Decimal?
     @State private var selectedCategory: Category?
-    @State private var preferredStore: Store?
+    @State private var preferredStore: Store? = nil
     @State private var selectedPhoto: PhotosPickerItem?
     @State private var isEditMode = false
     @State private var hasUnsavedChanges = false
@@ -74,8 +74,8 @@ struct ItemDetailView: View {
         self.isShoppingTripItem = isShoppingTripItem
         self.isPresentedAsSheet = isPresentedAsSheet
         
-        // Handle store initialization separately
-        if let tripStore = trip?.store {
+        // Only set preferredStore if we're in a trip
+        if isShoppingTripItem, let tripStore = trip?.store {
             _preferredStore = State(initialValue: tripStore)
         }
     }
@@ -202,6 +202,7 @@ struct ItemDetailView: View {
                     
                     if !isShoppingTripItem {
                         Picker("Preferred Store", selection: $preferredStore) {
+                            Text("None").tag(Optional<Store>(nil))
                             ForEach(stores) { store in
                                 Text(store.name).tag(Optional(store))
                             }
@@ -335,7 +336,8 @@ struct ItemDetailView: View {
             if selectedCategory == nil {
                 selectedCategory = categories.first(where: { $0.name == "Other" }) ?? categories.first
             }
-            if preferredStore == nil {
+            // Only set preferredStore if we're in a shopping trip
+            if isShoppingTripItem {
                 preferredStore = trip?.store ?? stores.first
             }
         }
@@ -373,10 +375,9 @@ struct ItemDetailView: View {
         preferredStore != original.store
     }
     
-    // Your saveItem function remains the same
+    // Update saveItem function
     func saveItem() {
         guard let category = selectedCategory else { return }
-        guard let store = preferredStore else { return }
         
         // Set name to "Untitled" if empty
         let itemName = name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty ? "Untitled" : name
@@ -388,35 +389,41 @@ struct ItemDetailView: View {
                 existingShoppingItem.quantity = quantity
                 existingShoppingItem.item.currentPrice = price
                 existingShoppingItem.item.category = category
-                existingShoppingItem.store = store
+                // Make sure we have a non-optional store value
+                if let store = preferredStore ?? trip?.store {
+                    existingShoppingItem.store = store
+                }
             } else if let existingItem = item {
                 existingItem.name = itemName
                 existingItem.currentPrice = price
                 existingItem.category = category
-                existingItem.preferredStore = store
+                existingItem.preferredStore = preferredStore
             } else {
                 let newItem = Item(
                     name: itemName,
                     currentPrice: price,
                     category: category,
-                    preferredStore: store
+                    preferredStore: preferredStore
                 )
                 
                 if isShoppingTripItem {
                     modelContext.insert(newItem)
                     print("Successfully saved new Item")
                     
-                    let newShoppingItem = try ShoppingItem(
-                        item: newItem,
-                        quantity: quantity,
-                        store: store
-                    )
-                    
-                    modelContext.insert(newShoppingItem)
-                    
-                    if let trip = trip {
-                        newShoppingItem.trip = trip
-                        trip.items.append(newShoppingItem)
+                    // Make sure we have a non-optional store value
+                    if let store = preferredStore ?? trip?.store {
+                        let newShoppingItem = try ShoppingItem(
+                            item: newItem,
+                            quantity: quantity,
+                            store: store
+                        )
+                        
+                        modelContext.insert(newShoppingItem)
+                        
+                        if let trip = trip {
+                            newShoppingItem.trip = trip
+                            trip.items.append(newShoppingItem)
+                        }
                     }
                 } else {
                     modelContext.insert(newItem)
