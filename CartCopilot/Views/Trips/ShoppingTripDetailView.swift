@@ -15,6 +15,7 @@ struct ShoppingTripDetailView: View {
     @Bindable var trip: ShoppingTrip
     @State private var showingNewItem = false
     @State private var selectedShoppingItem: ShoppingItem?
+    @State private var showingItemSelector = false
 
     private var currencyCode: String {
         locale.currency?.identifier ?? "USD"
@@ -61,6 +62,84 @@ struct ShoppingTripDetailView: View {
         self.trip = trip
     }
 
+    private struct ItemSelectorView: View {
+        @Environment(\.modelContext) private var modelContext
+        @Environment(\.dismiss) private var dismiss
+        @Bindable var trip: ShoppingTrip
+        @State private var selectedItems = Set<Item>()
+        @Query(sort: [SortDescriptor(\Item.name)]) private var items: [Item]
+        
+        private var groupedItems: [String: [Item]] {
+            Dictionary(grouping: items) { $0.category.name }
+        }
+        
+        private var sortedCategories: [String] {
+            groupedItems.keys.sorted()
+        }
+        
+        var body: some View {
+            NavigationStack {
+                List {
+                    ForEach(sortedCategories, id: \.self) { categoryName in
+                        Section(categoryName) {
+                            if let itemsInCategory = groupedItems[categoryName] {
+                                ForEach(itemsInCategory.sorted(by: { $0.name < $1.name })) { item in
+                                    HStack {
+                                        Text(item.name)
+                                        Spacer()
+                                        if selectedItems.contains(item) {
+                                            Image(systemName: "checkmark")
+                                                .foregroundStyle(.blue)
+                                        }
+                                    }
+                                    .contentShape(Rectangle())
+                                    .onTapGesture {
+                                        if selectedItems.contains(item) {
+                                            selectedItems.remove(item)
+                                        } else {
+                                            selectedItems.insert(item)
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                .navigationTitle("Add Items")
+                .toolbar {
+                    ToolbarItem(placement: .topBarLeading) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                    }
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button("Add Items") {
+                            addSelectedItems()
+                            dismiss()
+                        }
+                        .bold()
+                    }
+                }
+            }
+        }
+        
+        private func addSelectedItems() {
+            for item in selectedItems {
+                do {
+                    let shoppingItem = try ShoppingItem(
+                        item: item,
+                        quantity: 1,
+                        store: trip.store
+                    )
+                    modelContext.insert(shoppingItem)
+                    trip.items.append(shoppingItem)
+                } catch {
+                    print("Error adding item: \(error)")
+                }
+            }
+        }
+    }
+    
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -118,10 +197,20 @@ struct ShoppingTripDetailView: View {
             .navigationTitle("\(trip.store.name) total: \(formattedTotal)")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
-                    Button {
-                        showingNewItem = true
+                    Menu {
+                        Button {
+                            showingNewItem = true
+                        } label: {
+                            Label("New Item", systemImage: "plus")
+                        }
+                        
+                        Button {
+                            showingItemSelector = true
+                        } label: {
+                            Label("Add Existing Items", systemImage: "list.bullet")
+                        }
                     } label: {
-                        Label("Add Item", systemImage: "plus")
+                        Image(systemName: "plus")
                     }
                 }
             }
@@ -129,6 +218,9 @@ struct ShoppingTripDetailView: View {
                 ItemDetailView(trip: trip, isShoppingTripItem: true,
                               isPresentedAsSheet: true
                 )
+            }
+            .sheet(isPresented: $showingItemSelector) {
+                ItemSelectorView(trip: trip)
             }
         }
     }
