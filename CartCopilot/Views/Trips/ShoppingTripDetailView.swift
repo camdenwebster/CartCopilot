@@ -139,7 +139,7 @@ struct ShoppingTripDetailView: View {
             }
         }
     }
-    
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -165,32 +165,40 @@ struct ShoppingTripDetailView: View {
                 
                 // Your existing List
                 List {
-                    ForEach(trip.items.sorted { $0.dateAdded > $1.dateAdded }) { shoppingItem in
-                        NavigationLink {
-                            ItemDetailView(shoppingItem: shoppingItem,
-                                         trip: trip,
-                                         isShoppingTripItem: true,
-                                         isPresentedAsSheet: false
-                            )
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(shoppingItem.item.name)
-                                    Text(shoppingItem.item.category.name)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                VStack(alignment: .trailing) {
-                                    Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
-                                    Text("Qty: \(shoppingItem.quantity)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                    if trip.items.isEmpty {
+                        ContentUnavailableView(
+                            "No Items",
+                            systemImage: "carrot",
+                            description: Text("Add a new item or select an existing item to get started")
+                        )
+                    } else {
+                        ForEach(trip.items.sorted { $0.dateAdded > $1.dateAdded }) { shoppingItem in
+                            NavigationLink {
+                                ItemDetailView(shoppingItem: shoppingItem,
+                                             trip: trip,
+                                             isShoppingTripItem: true,
+                                             isPresentedAsSheet: false
+                                )
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(shoppingItem.item.name)
+                                        Text(shoppingItem.item.category.name)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    VStack(alignment: .trailing) {
+                                        Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
+                                        Text("Qty: \(shoppingItem.quantity)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
+                        .onDelete(perform: removeItems)
                     }
-                    .onDelete(perform: removeItems)
                 }
             }
             .onAppear(perform: printItems)

@@ -36,21 +36,29 @@ struct ItemListView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach(sortedCategories, id: \.self) { categoryName in
-                    Section(categoryName) {
-                        if let itemsInCategory = groupedItems[categoryName] {
-                            ForEach(itemsInCategory) { item in
-                                NavigationLink {
-                                    ItemDetailView(
-                                        item: item,
-                                        isShoppingTripItem: false,
-                                        isPresentedAsSheet: false
-                                    )
-                                } label: {
-                                    ItemRow(item: item)
+                if items.isEmpty {
+                    ContentUnavailableView(
+                        "No Items",
+                        systemImage: "carrot",
+                        description: Text("Add a new item to get started")
+                    )
+                } else {
+                    ForEach(sortedCategories, id: \.self) { categoryName in
+                        Section(categoryName) {
+                            if let itemsInCategory = groupedItems[categoryName] {
+                                ForEach(itemsInCategory) { item in
+                                    NavigationLink {
+                                        ItemDetailView(
+                                            item: item,
+                                            isShoppingTripItem: false,
+                                            isPresentedAsSheet: false
+                                        )
+                                    } label: {
+                                        ItemRow(item: item)
+                                    }
                                 }
-                            }
-                            .onDelete(perform: deleteItem)
+                                .onDelete(perform: deleteItem)
+                }
                         }
                     }
                 }
