@@ -22,22 +22,30 @@ struct ShoppingTripListView: View {
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTrip) {
-                ForEach(trips) { trip in
-                    NavigationLink(value: trip) {
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(trip.store.name)
-                                Text(trip.date, style: .date)
-                                    .font(.caption)
-                                    .foregroundColor(.secondary)
+                if trips.isEmpty {
+                    ContentUnavailableView(
+                        "No Shopping Trips",
+                        systemImage: "cart",
+                        description: Text("Add a new shopping trip to get started")
+                    )
+                } else {
+                    ForEach(trips) { trip in
+                        NavigationLink(value: trip) {
+                            HStack {
+                                VStack(alignment: .leading) {
+                                    Text(trip.store.name)
+                                    Text(trip.date, style: .date)
+                                        .font(.caption)
+                                        .foregroundColor(.secondary)
+                                }
+                                Spacer()
+                                Text(trip.total.formatted(.currency(code: currencyCode)))
+                                    .foregroundStyle(.secondary)
                             }
-                            Spacer()
-                            Text(trip.total.formatted(.currency(code: currencyCode)))
-                                .foregroundStyle(.secondary)
                         }
                     }
+                    .onDelete(perform: deleteTrips)
                 }
-                .onDelete(perform: deleteTrips)
             }
             .navigationTitle("Shopping Trips")
             .toolbar {

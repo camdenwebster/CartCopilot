@@ -70,7 +70,10 @@ struct ShoppingTripDetailView: View {
         @Query(sort: [SortDescriptor(\Item.name)]) private var items: [Item]
         
         private var groupedItems: [String: [Item]] {
-            Dictionary(grouping: items) { $0.category.name }
+            Dictionary(grouping: items.filter { item in
+                // Filter items that either have no preferred store or match the trip's store
+                item.preferredStore == nil || item.preferredStore?.id == trip.store.id
+            }) { $0.category.name }
         }
         
         private var sortedCategories: [String] {
@@ -126,6 +129,11 @@ struct ShoppingTripDetailView: View {
         private func addSelectedItems() {
             for item in selectedItems {
                 do {
+                    // If the item has no preferred store, set it to the trip's store
+                    if item.preferredStore == nil {
+                        item.preferredStore = trip.store
+                    }
+                    
                     let shoppingItem = try ShoppingItem(
                         item: item,
                         quantity: 1,
@@ -139,7 +147,7 @@ struct ShoppingTripDetailView: View {
             }
         }
     }
-    
+    // MARK: - Body
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -165,32 +173,40 @@ struct ShoppingTripDetailView: View {
                 
                 // Your existing List
                 List {
-                    ForEach(trip.items.sorted { $0.dateAdded > $1.dateAdded }) { shoppingItem in
-                        NavigationLink {
-                            ItemDetailView(shoppingItem: shoppingItem,
-                                         trip: trip,
-                                         isShoppingTripItem: true,
-                                         isPresentedAsSheet: false
-                            )
-                        } label: {
-                            HStack {
-                                VStack(alignment: .leading) {
-                                    Text(shoppingItem.item.name)
-                                    Text(shoppingItem.item.category.name)
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
-                                }
-                                Spacer()
-                                VStack(alignment: .trailing) {
-                                    Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
-                                    Text("Qty: \(shoppingItem.quantity)")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+                    if trip.items.isEmpty {
+                        ContentUnavailableView(
+                            "No Items",
+                            systemImage: "carrot",
+                            description: Text("Add a new item or select an existing item to get started")
+                        )
+                    } else {
+                        ForEach(trip.items.sorted { $0.dateAdded > $1.dateAdded }) { shoppingItem in
+                            NavigationLink {
+                                ItemDetailView(shoppingItem: shoppingItem,
+                                             trip: trip,
+                                             isShoppingTripItem: true,
+                                             isPresentedAsSheet: false
+                                )
+                            } label: {
+                                HStack {
+                                    VStack(alignment: .leading) {
+                                        Text(shoppingItem.item.name)
+                                        Text(shoppingItem.item.category.name)
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
+                                    Spacer()
+                                    VStack(alignment: .trailing) {
+                                        Text(shoppingItem.currentPrice as Decimal, format: .currency(code: currencyCode))
+                                        Text("Qty: \(shoppingItem.quantity)")
+                                            .font(.caption)
+                                            .foregroundStyle(.secondary)
+                                    }
                                 }
                             }
                         }
+                        .onDelete(perform: removeItems)
                     }
-                    .onDelete(perform: removeItems)
                 }
             }
             .onAppear(perform: printItems)
