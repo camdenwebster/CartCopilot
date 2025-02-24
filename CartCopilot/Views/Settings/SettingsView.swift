@@ -15,18 +15,22 @@ struct SettingsView: View {
         NavigationStack {
             Form {
                 Section("Management") {
-                    NavigationLink("Categories") {
+                    NavigationLink {
                         CategoriesView()
+                    } label: {
+                        Label("Categories", systemImage: "tag.fill")
                     }
                     
-                    NavigationLink("Stores") {
+                    NavigationLink {
                         StoresView()
+                    } label: {
+                        Label("Stores", systemImage: "storefront.fill")
                     }
                 }
                 
                 Section("About") {
                     HStack {
-                        Text("Version")
+                        Label("Version", systemImage: "info.circle.fill")
                         Spacer()
                         Text("1.0.0")
                     }
@@ -51,6 +55,7 @@ struct CategoriesView: View {
                     CategoryFormView(category: category, showSheet: .constant(false))
                 } label: {
                     HStack {
+                        Text(category.emoji ?? "⚪\u{fe0f}")
                         Text(category.name)
                         Spacer()
                         Text(category.taxRate, format: .percent)
@@ -98,11 +103,17 @@ struct StoresView: View {
                 NavigationLink {
                     StoreFormView(store: store, showSheet: .constant(false))
                 } label: {
-                    VStack(alignment: .leading) {
-                        Text(store.name)
-                        Text(store.address)
-                            .font(.subheadline)
+                    HStack {
+                        Image(systemName: "building.2.fill")
                             .foregroundStyle(.secondary)
+                        VStack(alignment: .leading) {
+                            Text(store.name)
+                            if !store.address.isEmpty {
+                                Text(store.address)
+                                    .font(.subheadline)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
                 }
             }
@@ -138,33 +149,84 @@ struct CategoryFormView: View {
     var category: Category?
     @State private var name: String
     @State private var taxRate: Double
+    @State private var selectedEmoji: String?
+    @State private var showingEmojiPicker = false
     
     init(category: Category? = nil, showSheet: Binding<Bool>) {
         self.category = category
         self._showSheet = showSheet
         self._name = State(initialValue: category?.name ?? "")
         self._taxRate = State(initialValue: category?.taxRate ?? 0.0825)
+        self._selectedEmoji = State(initialValue: category?.emoji)
     }
+    
+    private let emojis = ["🥕", "🥦", "🥬", "🥒", "🧄", "🧅", "🥔", "🍠", "🥐", "🥖", "🥨", "🥯", "🥞", "🧇", "🧀", "🥚", "🥓", "🥩", "🍗", "🍖", "🌭", "🍔", "🍟", "🥪", "🥙", "🧆", "🌮", "🌯", "🥗", "🥘", "🥫", "🍝", "🍜", "🍲", "🍛", "🍣", "🍱", "🥟", "🦪", "🍤", "🍙", "🍚", "🍘", "🍥", "🥠", "🥮", "🍢", "🍡", "🍧", "🍨", "🍦", "🥧", "🧁", "🍰", "🎂", "🍮", "🍭", "🍬", "🍫", "🍿", "🍩", "🍪", "🌰", "🥜", "🍯", "🥛", "🍼", "☕\u{fef}", "🫖", "🍵", "🧃", "🥤", "🧋", "🍶", "🍺", "🍻", "🥂", "🍷", "🥃", "🍸", "🍹", "🧊", "🥄", "🍴", "🍽", "🥢", "🧂"]
     
     var body: some View {
         Form {
-            TextField("Category Name", text: $name)
-            HStack {
-                Text("Tax Rate")
-                Spacer()
-                Text(taxRate, format: .percent)
+            Section {
+                HStack(spacing: 12) {
+                    // Emoji Button (25% width)
+                    Button(action: {
+                        withAnimation {
+                            showingEmojiPicker.toggle()
+                        }
+                    }) {
+                        Text(selectedEmoji ?? "⚪\u{fe0f}")
+                            .font(.title2)
+                            .frame(maxWidth: .infinity)
+                            .padding(.vertical, 8)
+                            .background(Color(.systemGray6))
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(Color(.systemGray4), lineWidth: 1)
+                            )
+                            .cornerRadius(8)
+                    }
+                    .frame(width: UIScreen.main.bounds.width * 0.2)
+                    
+                    // Name Field (75% width)
+                    TextField("Category Name", text: $name)
+                        .frame(maxWidth: .infinity)
+                }
+                
+                if showingEmojiPicker {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHGrid(rows: [GridItem(.flexible())], spacing: 12) {
+                            ForEach(emojis, id: \.self) { emoji in
+                                Button(action: {
+                                    selectedEmoji = emoji
+                                    showingEmojiPicker = false
+                                }) {
+                                    Text(emoji)
+                                        .font(.title2)
+                                }
+                            }
+                        }
+                        .padding(.vertical, 8)
+                    }
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                }
             }
-            Stepper("", value: $taxRate, in: 0...1, step: 0.0025)
+            
+            Section {
+                HStack {
+                    Text("Tax Rate")
+                    Spacer()
+                    Text(taxRate, format: .percent)
+                }
+                Stepper("", value: $taxRate, in: 0...1, step: 0.0025)
+            }
         }
         .navigationTitle(category == nil ? "New Category" : "Edit Category")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .cancellationAction) {
-                Button("Cancel") {
-                    showSheet = false
-                    dismiss()
-                }
-            }
+//            ToolbarItem(placement: .cancellationAction) {
+//                Button("Cancel") {
+//                    showSheet = false
+//                    dismiss()
+//                }
+//            }
             ToolbarItem(placement: .confirmationAction) {
                 Button("Save") {
                     saveCategory()
@@ -179,8 +241,9 @@ struct CategoryFormView: View {
         if let existingCategory = category {
             existingCategory.name = name
             existingCategory.taxRate = taxRate
+            existingCategory.emoji = selectedEmoji
         } else {
-            let newCategory = Category(name: name, taxRate: taxRate)
+            let newCategory = Category(name: name, taxRate: taxRate, emoji: selectedEmoji)
             modelContext.insert(newCategory)
         }
     }
@@ -242,4 +305,3 @@ struct StoreFormView: View {
     SettingsView()
         .modelContainer(for: [Category.self, Store.self])
 }
-

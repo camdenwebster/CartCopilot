@@ -96,6 +96,15 @@ struct ItemDetailView: View {
                 isEnabled: isFieldsEnabled
             )
             
+            ItemCategoryStoreSection(
+                selectedCategory: $selectedCategory,
+                preferredStore: $preferredStore,
+                categories: categories,
+                stores: stores,
+                isShoppingTripItem: isShoppingTripItem,
+                isEnabled: isFieldsEnabled
+            )
+            
             if isShoppingTripItem {
                 Section("Current Trip") {
                     HStack {
@@ -108,15 +117,6 @@ struct ItemDetailView: View {
                         .disabled(!isFieldsEnabled)
                 }
             }
-            
-            ItemDetailsSection(
-                selectedCategory: $selectedCategory,
-                preferredStore: $preferredStore,
-                categories: categories,
-                stores: stores,
-                isShoppingTripItem: isShoppingTripItem,
-                isEnabled: isFieldsEnabled
-            )
         }
     }
     
@@ -178,12 +178,12 @@ struct ItemDetailView: View {
                     }
                 }
             } header: {
-                Text("Basic Info")
+                Text("Item Details")
             }
         }
     }
 
-    private struct ItemDetailsSection: View {
+    private struct ItemCategoryStoreSection: View {
         @Binding var selectedCategory: Category?
         @Binding var preferredStore: Store?
         let categories: [Category]
@@ -192,42 +192,39 @@ struct ItemDetailView: View {
         let isEnabled: Bool
         
         var body: some View {
-            Section {
-                if isEnabled {
-                    Picker("Category", selection: $selectedCategory) {
-                        ForEach(categories) { category in
-                            Text(category.name).tag(Optional(category))
-                        }
+            if isEnabled {
+                Picker("Category", selection: $selectedCategory) {
+                    ForEach(categories) { category in
+                        Text(category.name).tag(Optional(category))
                     }
-                    
-                    if !isShoppingTripItem {
-                        Picker("Preferred Store", selection: $preferredStore) {
-                            Text("None").tag(Optional<Store>(nil))
-                            ForEach(stores) { store in
-                                Text(store.name).tag(Optional(store))
-                            }
-                        }
-                    }
-                } else {
-                    HStack {
-                        Text("Category")
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(selectedCategory?.name ?? "None")
-                    }
-                    
-                    if !isShoppingTripItem {
-                        HStack {
-                            Text("Preferred Store")
-                                .foregroundStyle(.secondary)
-                            Spacer()
-                            Text(preferredStore?.name ?? "None")
+                }
+                
+                if !isShoppingTripItem {
+                    Picker("Preferred Store", selection: $preferredStore) {
+                        Text("None").tag(Optional<Store>(nil))
+                        ForEach(stores) { store in
+                            Text(store.name).tag(Optional(store))
                         }
                     }
                 }
-            } header: {
-                Text("Details")
+            } else {
+                HStack {
+                    Text("Category")
+                        .foregroundStyle(.secondary)
+                    Spacer()
+                    Text(selectedCategory?.name ?? "None")
+                }
+                
+                if !isShoppingTripItem {
+                    HStack {
+                        Text("Preferred Store")
+                            .foregroundStyle(.secondary)
+                        Spacer()
+                        Text(preferredStore?.name ?? "None")
+                    }
+                }
             }
+   
         }
     }
 

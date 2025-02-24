@@ -157,6 +157,7 @@ struct ShoppingTripDetailView: View {
                         HStack(spacing: 16) {
                             ForEach(categoryTotals) { categoryTotal in
                                 VStack(alignment: .leading) {
+                                    Text(categoryTotal.category.emoji ?? "⚪\u{fe0f}")
                                     Text(categoryTotal.category.name)
                                         .font(.subheadline)
                                         .foregroundStyle(.secondary)
@@ -189,6 +190,7 @@ struct ShoppingTripDetailView: View {
                                 )
                             } label: {
                                 HStack {
+                                    Text(shoppingItem.item.category.emoji ?? "⚪\u{fe0f}")
                                     VStack(alignment: .leading) {
                                         Text(shoppingItem.item.name)
                                         Text(shoppingItem.item.category.name)
@@ -210,7 +212,7 @@ struct ShoppingTripDetailView: View {
                 }
             }
             .onAppear(perform: printItems)
-            .navigationTitle("\(trip.store.name) total: \(formattedTotal)")
+            .navigationTitle("\(trip.store.name): \(formattedTotal)")
             .toolbar {
                 ToolbarItem(placement: .topBarTrailing) {
                     Menu {
