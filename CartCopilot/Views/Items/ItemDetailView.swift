@@ -390,11 +390,17 @@ struct ItemDetailView: View {
                 if let store = preferredStore ?? trip?.store {
                     existingShoppingItem.store = store
                 }
+                
+                // Track shopping item edit
+                TelemetryManager.shared.trackShoppingItemEdited(name: itemName)
             } else if let existingItem = item {
                 existingItem.name = itemName
                 existingItem.currentPrice = price
                 existingItem.category = category
                 existingItem.preferredStore = preferredStore
+                
+                // Track item edit
+                TelemetryManager.shared.trackItemEdited(name: itemName)
             } else {
                 let newItem = Item(
                     name: itemName,
@@ -407,6 +413,13 @@ struct ItemDetailView: View {
                     modelContext.insert(newItem)
                     print("Successfully saved new Item")
                     
+                    // Track item creation
+                    TelemetryManager.shared.trackItemCreated(
+                        name: itemName,
+                        price: NSDecimalNumber(decimal: price).doubleValue,
+                        category: category.name
+                    )
+                    
                     // Make sure we have a non-optional store value
                     if let store = preferredStore ?? trip?.store {
                         let newShoppingItem = try ShoppingItem(
@@ -417,6 +430,13 @@ struct ItemDetailView: View {
                         
                         modelContext.insert(newShoppingItem)
                         
+                        // Track shopping item added
+                        TelemetryManager.shared.trackShoppingItemAdded(
+                            name: itemName,
+                            price: NSDecimalNumber(decimal: price).doubleValue,
+                            fromExisting: false
+                        )
+                        
                         if let trip = trip {
                             newShoppingItem.trip = trip
                             trip.items.append(newShoppingItem)
@@ -424,6 +444,13 @@ struct ItemDetailView: View {
                     }
                 } else {
                     modelContext.insert(newItem)
+                    
+                    // Track item creation
+                    TelemetryManager.shared.trackItemCreated(
+                        name: itemName,
+                        price: NSDecimalNumber(decimal: price).doubleValue,
+                        category: category.name
+                    )
                 }
             }
             

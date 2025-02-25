@@ -7,14 +7,56 @@
 
 import SwiftUI
 import SwiftData
+import SafariServices
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedSection: SettingsSection? = .categories // Default selection
-    
+    @State private var showingSafariView = false
+    @State private var selectedURL: URL?
+
+    // Add external links
+    private let externalLinks: [String: ExternalLink] = [
+        "knowledgeBase": ExternalLink(
+            title: "Knowledge Base",
+            icon: "questionmark.circle.fill",
+            url: URL(string: "https://www.apple.com")!
+        ),
+        "support": ExternalLink(
+            title: "Support",
+            icon: "envelope.fill",
+            url: URL(string: "https://developer.apple.com")!
+        ),
+        "roadmap": ExternalLink(
+            title: "Roadmap",
+            icon: "map.fill",
+            url: URL(string: "https://mothersound.dev")!
+        ),
+        "rateUs": ExternalLink(
+            title: "Rate Us",
+            icon: "star.fill",
+            url: URL(string: "https://mothersound.dev")!
+        ),
+        "privacyPolicy": ExternalLink(
+            title: "Privacy Policy",
+            icon: "lock.fill",
+            url: URL(string: "https://mothersound.dev")!
+        ),
+        "termsOfService": ExternalLink(
+            title: "Terms of Service",
+            icon: "doc.text.fill",
+            url: URL(string: "https://mothersound.dev")!
+        )
+    ]
+
     var body: some View {
         NavigationSplitView {
             Form {
+                Section("General") {
+                    Label("Apperance", systemImage: "paintbrush.fill")
+                    Label("Notifications", systemImage: "bell.fill")
+                    Label("Location Services", systemImage: "location.fill")
+                }
                 Section("Management") {
                     NavigationLink(value: SettingsSection.categories) {
                         Label("Categories", systemImage: "tag.fill")
@@ -25,13 +67,42 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("About") {
-                    NavigationLink(value: SettingsSection.version) {
-                        Label("Version", systemImage: "info.circle.fill")
-                    }
+                Section("Community & Support") {
+                    externalLinkButton(for: externalLinks["knowledgeBase"]!)
+                    externalLinkButton(for: externalLinks["support"]!)
+                    externalLinkButton(for: externalLinks["rateUs"]!)
                 }
+                
+                Section("About") {
+                    HStack {
+                        Label("Version", systemImage: "info.circle.fill")
+                        Spacer()
+                        Text("1.0.0")
+                            .foregroundColor(.secondary)
+                    }
+                    externalLinkButton(for: externalLinks["roadmap"]!)
+                    externalLinkButton(for: externalLinks["privacyPolicy"]!)
+                    externalLinkButton(for: externalLinks["termsOfService"]!)
+                }
+
             }
             .navigationTitle("Settings")
+            .navigationDestination(for: SettingsSection.self) { section in
+                switch section {
+                case .categories:
+                    CategoriesView()
+                case .stores:
+                    StoresView()
+                case .legal:
+                    Text("Terms of Service")
+                    Text("Privacy Policy")
+                }
+            }
+            .sheet(isPresented: $showingSafariView) {
+                if let url = selectedURL {
+                    SafariView(url: url)
+                }
+            }
         } detail: {
             if let selectedSection = selectedSection {
                 switch selectedSection {
@@ -39,15 +110,88 @@ struct SettingsView: View {
                     CategoriesView()
                 case .stores:
                     StoresView()
-                case .version:
-                    HStack {
-                        Label("Version", systemImage: "info.circle.fill")
-                        Spacer()
-                        Text("1.0.0")
-                    }
+                case .legal:
+                    Text("Terms of Service")
+                    Text("Privacy Policy")
                 }
             } else {
                 Text("Select a Section")
+            }
+        }
+        .onChange(of: selectedSection) { oldValue, newValue in
+            if let section = newValue {
+                // Track when user navigates to a settings section
+                TelemetryManager.shared.trackTabSelected(tab: "settings-\(section)")
+            }
+        }
+    }
+    
+    // Helper function to create external link buttons
+    private func externalLinkButton(for link: ExternalLink) -> some View {
+        Button {
+            // Add print statement for debugging
+            print("Button tapped for: \(link.title) with URL: \(link.url.absoluteString)")
+            selectedURL = link.url
+            showingSafariView = true
+        } label: {
+            HStack {
+                Label(link.title, systemImage: link.icon)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ExternalLink {
+    let title: String
+    let icon: String
+    let url: URL
+}
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    @Environment(\.presentationMode) var presentationMode
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let configuration = SFSafariViewController.Configuration()
+        configuration.entersReaderIfAvailable = false
+        
+        let safariViewController = SFSafariViewController(url: url, configuration: configuration)
+        safariViewController.delegate = context.coordinator
+        safariViewController.preferredControlTintColor = .systemBlue
+        
+        // Print the URL to help with debugging
+        print("Opening URL: \(url.absoluteString)")
+        
+        return safariViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
+    
+    func makeCoordinator() -> Coordinator {
+        Coordinator(self)
+    }
+    
+    class Coordinator: NSObject, SFSafariViewControllerDelegate {
+        let parent: SafariView
+        
+        init(_ parent: SafariView) {
+            self.parent = parent
+        }
+        
+        func safariViewControllerDidFinish(_ controller: SFSafariViewController) {
+            parent.presentationMode.wrappedValue.dismiss()
+        }
+        
+        func safariViewController(_ controller: SFSafariViewController, didCompleteInitialLoad didLoadSuccessfully: Bool) {
+            print("Safari view did complete initial load: \(didLoadSuccessfully)")
+            if !didLoadSuccessfully {
+                print("Failed to load URL: \(parent.url.absoluteString)")
             }
         }
     }
@@ -56,7 +200,7 @@ struct SettingsView: View {
 enum SettingsSection: Hashable {
     case categories
     case stores
-    case version
+    case legal
 }
 
 struct CategoriesView: View {
@@ -65,36 +209,42 @@ struct CategoriesView: View {
         SortDescriptor(\Category.name)
     ]) private var categories: [Category]
     @State private var showingAddCategory = false
+    @State private var selectedCategory: Category?
     
     var body: some View {
-        List {
+        List(selection: $selectedCategory) {
             ForEach(categories) { category in
-                NavigationLink {
-                    CategoryFormView(category: category, showSheet: .constant(false))
-                } label: {
-                    HStack {
-                        Text(category.emoji ?? "⚪\u{fe0f}")
-                        Text(category.name)
-                        Spacer()
-                        Text(category.taxRate, format: .percent)
-                            .font(.subheadline)
-                            .foregroundStyle(.secondary)
-                    }
+                HStack {
+                    Text(category.emoji ?? "⚪\u{fe0f}")
+                    Text(category.name)
+                    Spacer()
+                    Text(category.taxRate, format: .percent)
+                        .font(.subheadline)
+                        .foregroundStyle(.secondary)
                 }
+                .tag(category)
             }
             .onDelete(perform: deleteCategories)
         }
         .navigationTitle("Categories")
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button {
                 showingAddCategory = true
+                // Track when user initiates adding a new category
+                TelemetryManager.shared.trackTabSelected(tab: "add-category")
             } label: {
                 Label("Add Category", systemImage: "plus")
             }
         }
-        .navigationDestination(isPresented: $showingAddCategory) {
-            CategoryFormView(showSheet: $showingAddCategory)
+        .sheet(isPresented: $showingAddCategory) {
+            NavigationStack {
+                CategoryFormView(showSheet: $showingAddCategory)
+            }
+        }
+        .sheet(item: $selectedCategory) { category in
+            NavigationStack {
+                CategoryFormView(category: category, showSheet: .constant(false))
+            }
         }
     }
     
@@ -103,6 +253,8 @@ struct CategoriesView: View {
             let category = categories[index]
             if !category.isDefault {
                 modelContext.delete(category)
+                // Track category deletion
+                TelemetryManager.shared.trackCategoryDeleted()
             }
         }
     }
@@ -114,40 +266,46 @@ struct StoresView: View {
         SortDescriptor(\Store.name)
     ]) private var stores: [Store]
     @State private var showingAddStore = false
+    @State private var selectedStore: Store?
     
     var body: some View {
-        List {
+        List(selection: $selectedStore) {
             ForEach(stores) { store in
-                NavigationLink {
-                    StoreFormView(store: store, showSheet: .constant(false))
-                } label: {
-                    HStack {
-                        Image(systemName: "building.2.fill")
-                            .foregroundStyle(.secondary)
-                        VStack(alignment: .leading) {
-                            Text(store.name)
-                            if !store.address.isEmpty {
-                                Text(store.address)
-                                    .font(.subheadline)
-                                    .foregroundStyle(.secondary)
-                            }
+                HStack {
+                    Image(systemName: "building.2.fill")
+                        .foregroundStyle(.secondary)
+                    VStack(alignment: .leading) {
+                        Text(store.name)
+                        if !store.address.isEmpty {
+                            Text(store.address)
+                                .font(.subheadline)
+                                .foregroundStyle(.secondary)
                         }
                     }
                 }
+                .tag(store)
             }
             .onDelete(perform: deleteStores)
         }
         .navigationTitle("Stores")
-        .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             Button {
                 showingAddStore = true
+                // Track when user initiates adding a new store
+                TelemetryManager.shared.trackTabSelected(tab: "add-store")
             } label: {
                 Label("Add Store", systemImage: "plus")
             }
         }
-        .navigationDestination(isPresented: $showingAddStore) {
-            StoreFormView(showSheet: $showingAddStore)
+        .sheet(isPresented: $showingAddStore) {
+            NavigationStack {
+                StoreFormView(showSheet: $showingAddStore)
+            }
+        }
+        .sheet(item: $selectedStore) { store in
+            NavigationStack {
+                StoreFormView(store: store, showSheet: .constant(false))
+            }
         }
     }
     
@@ -155,6 +313,8 @@ struct StoresView: View {
         for index in offsets {
             let store = stores[index]
             modelContext.delete(store)
+            // Track store deletion
+            TelemetryManager.shared.trackStoreDeleted()
         }
     }
 }
@@ -260,9 +420,13 @@ struct CategoryFormView: View {
             existingCategory.name = name
             existingCategory.taxRate = taxRate
             existingCategory.emoji = selectedEmoji
+            // Track category edit
+            TelemetryManager.shared.trackCategoryEdited(name: name)
         } else {
             let newCategory = Category(name: name, taxRate: taxRate, emoji: selectedEmoji)
             modelContext.insert(newCategory)
+            // Track category creation
+            TelemetryManager.shared.trackCategoryCreated(name: name)
         }
     }
 }
@@ -312,9 +476,13 @@ struct StoreFormView: View {
         if let existingStore = store {
             existingStore.name = name
             existingStore.address = address
+            // Track store edit
+            TelemetryManager.shared.trackStoreEdited(name: name)
         } else {
             let newStore = Store(name: name, address: address)
             modelContext.insert(newStore)
+            // Track store creation
+            TelemetryManager.shared.trackStoreCreated(name: name)
         }
     }
 }

@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import TelemetryDeck
 
 struct ShoppingTripListView: View {
     @Environment(\.modelContext) var modelContext
@@ -50,6 +51,7 @@ struct ShoppingTripListView: View {
             .navigationTitle("Shopping Trips")
             .toolbar {
                 Button {
+                    TelemetryManager.shared.trackTabSelected(tab: "create-trip")
                     showingNewTrip = true
                 } label: {
                     Label("Add Trip", systemImage: "plus")
@@ -66,6 +68,8 @@ struct ShoppingTripListView: View {
             }
         }
         .onAppear {
+            TelemetryManager.shared.trackTabSelected(tab: "trips-list")
+            
             // Select the first trip if none is selected
             if selectedTrip == nil, let firstTrip = trips.first {
                 selectedTrip = firstTrip
@@ -77,6 +81,12 @@ struct ShoppingTripListView: View {
         for index in offsets {
             let trip = trips[index]
             modelContext.delete(trip)
+            
+            TelemetryManager.shared.trackShoppingTripCompleted(
+                store: trip.store.name,
+                itemCount: trip.items.count,
+                totalAmount: NSDecimalNumber(decimal: trip.total).doubleValue
+            )
         }
     }
 }
