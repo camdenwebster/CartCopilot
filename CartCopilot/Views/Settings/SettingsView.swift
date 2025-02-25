@@ -10,35 +10,53 @@ import SwiftData
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
+    @State private var selectedSection: SettingsSection? = .categories // Default selection
     
     var body: some View {
-        NavigationStack {
+        NavigationSplitView {
             Form {
                 Section("Management") {
-                    NavigationLink {
-                        CategoriesView()
-                    } label: {
+                    NavigationLink(value: SettingsSection.categories) {
                         Label("Categories", systemImage: "tag.fill")
                     }
                     
-                    NavigationLink {
-                        StoresView()
-                    } label: {
+                    NavigationLink(value: SettingsSection.stores) {
                         Label("Stores", systemImage: "storefront.fill")
                     }
                 }
                 
                 Section("About") {
+                    NavigationLink(value: SettingsSection.version) {
+                        Label("Version", systemImage: "info.circle.fill")
+                    }
+                }
+            }
+            .navigationTitle("Settings")
+        } detail: {
+            if let selectedSection = selectedSection {
+                switch selectedSection {
+                case .categories:
+                    CategoriesView()
+                case .stores:
+                    StoresView()
+                case .version:
                     HStack {
                         Label("Version", systemImage: "info.circle.fill")
                         Spacer()
                         Text("1.0.0")
                     }
                 }
+            } else {
+                Text("Select a Section")
             }
-            .navigationTitle("Settings")
         }
     }
+}
+
+enum SettingsSection: Hashable {
+    case categories
+    case stores
+    case version
 }
 
 struct CategoriesView: View {
