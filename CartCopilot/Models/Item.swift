@@ -23,7 +23,6 @@ final class Item: PriceCalculatable {
     var priceHistory: [Date: Decimal]?
     var brand: String?
     var upc: String?
-    var emoji: String?
     var isFavorite: Bool
     var unit: Int?
     var unitType: String?
@@ -81,14 +80,13 @@ final class Item: PriceCalculatable {
         unit = newUnit
     }
     
-    init(name: String, currentPrice: Decimal, category: Category, priceHistory: [Date : Decimal]? = nil, brand: String? = nil, upc: String? = nil, emoji: String? = nil, isFavorite: Bool = false, unit: Int? = nil, unitType: String? = nil, preferredStore: Store? = nil, photoData: Data? = nil, dateAdded: Date = Date()) {
+    init(name: String, currentPrice: Decimal, category: Category, priceHistory: [Date : Decimal]? = nil, brand: String? = nil, upc: String? = nil, isFavorite: Bool = false, unit: Int? = nil, unitType: String? = nil, preferredStore: Store? = nil, photoData: Data? = nil, dateAdded: Date = Date()) {
         self.name = name
         self.currentPrice = currentPrice
         self.category = category
         self.priceHistory = priceHistory
         self.brand = brand
         self.upc = upc
-        self.emoji = emoji
         self.isFavorite = isFavorite
         self.unit = unit
         self.unitType = unitType
@@ -97,4 +95,3 @@ final class Item: PriceCalculatable {
         self.dateAdded = dateAdded
     }
 }
-

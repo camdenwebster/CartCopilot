@@ -40,44 +40,44 @@ class DataBootstrapper {
                 Store(name: "Other", address: "", isDefault: true)
             ]
             
-            // Flattened categories with isDefault set to true for all
+            // Update categories with emojis
             let categories = [
                 // Main categories
-                Category(name: "Groceries", taxRate: 0.0175, isDefault: true),
-                Category(name: "Prepared Food", taxRate: 0.0825, isDefault: true),
-                Category(name: "Household", taxRate: 0.0825, isDefault: true),
-                Category(name: "Clothing", taxRate: 0.0825, isDefault: true),
-                Category(name: "Electronics", taxRate: 0.0825, isDefault: true),
+                Category(name: "Groceries", taxRate: 0.0175, isDefault: true, emoji: "🛒"),
+                Category(name: "Prepared Food", taxRate: 0.0825, isDefault: true, emoji: "🍱"),
+                Category(name: "Household", taxRate: 0.0825, isDefault: true, emoji: "🏠"),
+                Category(name: "Clothing", taxRate: 0.0825, isDefault: true, emoji: "👕"),
+                Category(name: "Electronics", taxRate: 0.0825, isDefault: true, emoji: "📱"),
                 
                 // Grocery subcategories
-                Category(name: "Bakery", taxRate: 0.0175, isDefault: true),
-                Category(name: "Baking Items", taxRate: 0.0175, isDefault: true),
-                Category(name: "Beverages", taxRate: 0.0175, isDefault: true),
-                Category(name: "Breads & Cereals", taxRate: 0.0175, isDefault: true),
-                Category(name: "Canned Foods & Soups", taxRate: 0.0175, isDefault: true),
-                Category(name: "Coffee & Tea", taxRate: 0.0175, isDefault: true),
-                Category(name: "Dairy, Eggs & Cheese", taxRate: 0.0175, isDefault: true),
-                Category(name: "Deli", taxRate: 0.0175, isDefault: true),
-                Category(name: "Frozen Foods", taxRate: 0.0175, isDefault: true),
-                Category(name: "Meat", taxRate: 0.0175, isDefault: true),
-                Category(name: "Pantry", taxRate: 0.0175, isDefault: true),
-                Category(name: "Pasta, Rice & Beans", taxRate: 0.0175, isDefault: true),
-                Category(name: "Pet Care", taxRate: 0.0175, isDefault: true),
-                Category(name: "Produce", taxRate: 0.0175, isDefault: true),
-                Category(name: "Sauces & Condiments", taxRate: 0.0175, isDefault: true),
-                Category(name: "Seafood", taxRate: 0.0175, isDefault: true),
-                Category(name: "Snacks & Candy", taxRate: 0.0175, isDefault: true),
-                Category(name: "Spices & Seasonings", taxRate: 0.0175, isDefault: true),
-                Category(name: "Wine, Beer & Spirits", taxRate: 0.0825, isDefault: true),
+                Category(name: "Bakery", taxRate: 0.0175, isDefault: true, emoji: "🥖"),
+                Category(name: "Baking Items", taxRate: 0.0175, isDefault: true, emoji: "🥄"),
+                Category(name: "Beverages", taxRate: 0.0175, isDefault: true, emoji: "🥤"),
+                Category(name: "Breads & Cereals", taxRate: 0.0175, isDefault: true, emoji: "🥐"),
+                Category(name: "Canned Foods & Soups", taxRate: 0.0175, isDefault: true, emoji: "🥫"),
+                Category(name: "Coffee & Tea", taxRate: 0.0175, isDefault: true, emoji: "☕"),
+                Category(name: "Dairy, Eggs & Cheese", taxRate: 0.0175, isDefault: true, emoji: "🥛"),
+                Category(name: "Deli", taxRate: 0.0175, isDefault: true, emoji: "🥪"),
+                Category(name: "Frozen Foods", taxRate: 0.0175, isDefault: true, emoji: "🧊"),
+                Category(name: "Meat", taxRate: 0.0175, isDefault: true, emoji: "🥩"),
+                Category(name: "Pantry", taxRate: 0.0175, isDefault: true, emoji: "🏺"),
+                Category(name: "Pasta, Rice & Beans", taxRate: 0.0175, isDefault: true, emoji: "🍝"),
+                Category(name: "Pet Care", taxRate: 0.0175, isDefault: true, emoji: "🐾"),
+                Category(name: "Produce", taxRate: 0.0175, isDefault: true, emoji: "🥬"),
+                Category(name: "Sauces & Condiments", taxRate: 0.0175, isDefault: true, emoji: "🥫"),
+                Category(name: "Seafood", taxRate: 0.0175, isDefault: true, emoji: "🐟"),
+                Category(name: "Snacks & Candy", taxRate: 0.0175, isDefault: true, emoji: "🍬"),
+                Category(name: "Spices & Seasonings", taxRate: 0.0175, isDefault: true, emoji: "🌶️"),
+                Category(name: "Wine, Beer & Spirits", taxRate: 0.0825, isDefault: true, emoji: "🍷"),
                 
                 // Home subcategories
-                Category(name: "Baby Care", taxRate: 0.0825, isDefault: true),
-                Category(name: "Childcare", taxRate: 0.0825, isDefault: true),
-                Category(name: "Cleaning Supplies", taxRate: 0.0825, isDefault: true),
-                Category(name: "Laundry", taxRate: 0.0825, isDefault: true),
-                Category(name: "Paper Products", taxRate: 0.0825, isDefault: true),
-                Category(name: "Personal Care", taxRate: 0.0825, isDefault: true),
-                Category(name: "Other", taxRate: 0.0825, isDefault: true)
+                Category(name: "Baby Care", taxRate: 0.0825, isDefault: true, emoji: "👶"),
+                Category(name: "Childcare", taxRate: 0.0825, isDefault: true, emoji: "🧸"),
+                Category(name: "Cleaning Supplies", taxRate: 0.0825, isDefault: true, emoji: "🧹"),
+                Category(name: "Laundry", taxRate: 0.0825, isDefault: true, emoji: "🧺"),
+                Category(name: "Paper Products", taxRate: 0.0825, isDefault: true, emoji: "🧻"),
+                Category(name: "Personal Care", taxRate: 0.0825, isDefault: true, emoji: "🧴"),
+                Category(name: "Other", taxRate: 0.0825, isDefault: true, emoji: "❓")
             ]
             
             print("Inserting \(stores.count) stores...")
