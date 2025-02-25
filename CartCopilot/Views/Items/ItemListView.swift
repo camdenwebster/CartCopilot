@@ -21,16 +21,16 @@ struct ItemListView: View {
         return items.filter { $0.name.localizedCaseInsensitiveContains(searchText) }
     }
     
-    var groupedItems: [String: [Item]] {
-        let grouped = Dictionary(grouping: filteredItems) { "\($0.category.emoji ?? "⚪\u{fe0f}") \($0.category.name)" }
+    var groupedItems: [Category: [Item]] {
+        let grouped = Dictionary(grouping: filteredItems) { $0.category }
         // Create a new dictionary with sorted arrays
         return grouped.mapValues { items in
             items.sorted { $0.name < $1.name }
         }
     }
     
-    var sortedCategories: [String] {
-        groupedItems.keys.sorted()
+    var sortedCategories: [Category] {
+        groupedItems.keys.sorted { $0.name < $1.name }
     }
     
     var body: some View {
@@ -43,9 +43,9 @@ struct ItemListView: View {
                         description: Text("Add a new item to get started")
                     )
                 } else {
-                    ForEach(sortedCategories, id: \.self) { categoryName in
-                        Section(categoryName) {
-                            if let itemsInCategory = groupedItems[categoryName] {
+                    ForEach(sortedCategories) { category in
+                        Section("\(category.emoji ?? "⚪\u{fe0f}") \(category.name)") {
+                            if let itemsInCategory = groupedItems[category] {
                                 ForEach(itemsInCategory) { item in
                                     NavigationLink {
                                         ItemDetailView(
@@ -57,8 +57,10 @@ struct ItemListView: View {
                                         ItemRow(item: item)
                                     }
                                 }
-                                .onDelete(perform: deleteItem)
-                }
+                                .onDelete(perform: { offsets in
+                                    deleteItems(category: category, at: offsets)
+                                })
+                            }
                         }
                     }
                 }
@@ -69,6 +71,8 @@ struct ItemListView: View {
                 EditButton()
                 Button {
                     showingNewItem = true
+                    // Track when user initiates adding a new item
+                    TelemetryManager.shared.trackTabSelected(tab: "add-item")
                 } label: {
                     Label("Add Item", systemImage: "plus")
                 }
@@ -80,12 +84,29 @@ struct ItemListView: View {
                 isPresentedAsSheet: true
             )
         }
+        .onAppear {
+            // Track when user views the items list
+            TelemetryManager.shared.trackTabSelected(tab: "items-list")
+        }
+    }
+    
+    func deleteItems(category: Category, at offsets: IndexSet) {
+        if let itemsInCategory = groupedItems[category] {
+            for offset in offsets {
+                let item = itemsInCategory[offset]
+                modelContext.delete(item)
+                // Track item deletion
+                TelemetryManager.shared.trackItemDeleted()
+            }
+        }
     }
     
     func deleteItem(at offsets: IndexSet) {
         for index in offsets {
             let item = items[index]
             modelContext.delete(item)
+            // Track item deletion
+            TelemetryManager.shared.trackItemDeleted()
         }
     }
 }
@@ -117,7 +138,7 @@ struct ItemRow: View {
     
     // Create and insert sample data
     let store = Store(name: "Costco", address: "123 Main St.")
-    let category = Category(name: "Fruits", taxRate: 0.07)
+    let category = Category(name: "Fruits", taxRate: 0.07, emoji: "🍎")
     let item = Item(name: "Apple", currentPrice: 1.0, category: category, preferredStore: store)
     
     // First insert the category, then the item
