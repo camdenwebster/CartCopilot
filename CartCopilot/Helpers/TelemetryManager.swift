@@ -48,6 +48,10 @@ class TelemetryManager {
         TelemetryManager.signal("shopping-item-deleted")
     }
     
+    func trackBarcodeScannerUsed() {
+        TelemetryManager.signal("barcode-scanner-used")
+    }
+    
     // MARK: - Shopping Trips
     
     func trackShoppingTripCreated(store: String?, itemCount: Int) {

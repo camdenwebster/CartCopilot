@@ -5,13 +5,6 @@
 //  Created by Camden Webster on 2/22/25.
 //
 
-//
-//  ItemDetailView.swift
-//  Cart Copilot
-//
-//  Created by Camden Webster on 2/9/25.
-//
-
 import PhotosUI
 import SwiftUI
 import SwiftData
@@ -28,6 +21,7 @@ struct ItemDetailView: View {
     var item: Item?
     var trip: ShoppingTrip?
     @State private var name = ""
+    @State private var brand: String? = nil
     @State private var quantity = 1
     @State private var currentPrice: Decimal?
     @State private var selectedCategory: Category?
@@ -92,6 +86,7 @@ struct ItemDetailView: View {
             
             ItemBasicInfoSection(
                 name: $name,
+                brand: $brand,
                 currentPrice: $currentPrice,
                 isEnabled: isFieldsEnabled,
                 item: item
@@ -123,6 +118,7 @@ struct ItemDetailView: View {
     
     private struct ItemBasicInfoSection: View {
         @Binding var name: String
+        @Binding var brand: String?
         @Binding var currentPrice: Decimal?
         @State private var showingBarcodeScanner = false
         @State private var upcString = ""
@@ -140,23 +136,55 @@ struct ItemDetailView: View {
         
         var body: some View {
             Section {
-                TextField("Item Name", text: $name)
-                    .disabled(!isEnabled)
+                HStack(spacing: 0){
+                    Text("Item")
+                    Spacer()
+                    TextField("Item Name", text: $name)
+                        .disabled(!isEnabled)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundColor(isEnabled ? .primary : .secondary)
+                        .frame(maxWidth: 200, alignment: .trailing)
+                }
+                
+                HStack(spacing: 0){
+                    Text("Brand")
+                    Spacer()
+                    TextField("Brand Name", text: Binding(
+                        get: { brand ?? "" },
+                        set: { brand = $0.isEmpty ? nil : $0 }
+                    ))
+                        .disabled(!isEnabled)
+                        .multilineTextAlignment(.trailing)
+                        .lineLimit(1)
+                        .truncationMode(.tail)
+                        .foregroundColor(isEnabled ? .primary : .secondary)
+                        .frame(maxWidth: 200, alignment: .trailing)
+                }
                 
                 HStack(spacing: 2) {
                     Text(currencySymbol)
                         .foregroundStyle(.secondary)
                     ZStack(alignment: .leading) {
-                        TextField("", text: $priceString)
-                            .keyboardType(.decimalPad)
-                            .focused($isPriceFieldFocused)
-                            .disabled(!isEnabled)
-                            .foregroundColor(.primary)
-                            .onChange(of: priceString) {
-                                if let decimal = Decimal(string: priceString) {
-                                    currentPrice = decimal
-                                } else if priceString.isEmpty {
-                                    currentPrice = nil
+                        HStack(spacing: 0) {
+                            Text("Price")
+                            Spacer()
+                            TextField("", text: $priceString)
+                                .multilineTextAlignment(.trailing)
+                                .keyboardType(.decimalPad)
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .focused($isPriceFieldFocused)
+                                .frame(maxWidth: 200, alignment: .trailing)
+                                .disabled(!isEnabled)
+                                .foregroundColor(.primary)
+                                .onChange(of: priceString) {
+                                    if let decimal = Decimal(string: priceString) {
+                                        currentPrice = decimal
+                                    } else if priceString.isEmpty {
+                                        currentPrice = nil
+                                    }
                                 }
                             }
                             .onAppear {
@@ -194,6 +222,7 @@ struct ItemDetailView: View {
                     if isEnabled {
                         Button(action: {
                             showingBarcodeScanner = true
+                            TelemetryManager.shared.trackBarcodeScannerUsed()
                         }) {
                             Image(systemName: "barcode.viewfinder")
                         }
@@ -413,6 +442,7 @@ struct ItemDetailView: View {
         do {
             if let existingShoppingItem = shoppingItem {
                 existingShoppingItem.item.name = itemName
+                existingShoppingItem.item.brand = brand
                 existingShoppingItem.quantity = quantity
                 existingShoppingItem.item.currentPrice = price
                 existingShoppingItem.item.category = category
@@ -425,6 +455,7 @@ struct ItemDetailView: View {
                 TelemetryManager.shared.trackShoppingItemEdited(name: itemName)
             } else if let existingItem = item {
                 existingItem.name = itemName
+                existingItem.brand = brand
                 existingItem.currentPrice = price
                 existingItem.category = category
                 existingItem.preferredStore = preferredStore
@@ -438,6 +469,9 @@ struct ItemDetailView: View {
                     category: category,
                     preferredStore: preferredStore
                 )
+                
+                // Set brand if provided
+                newItem.brand = brand
                 
                 if isShoppingTripItem {
                     modelContext.insert(newItem)
