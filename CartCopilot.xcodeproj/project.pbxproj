@@ -33,9 +33,22 @@
 		19BA8E8B2D6A90500016823D /* CartCopilotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartCopilotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
 
+/* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		19EBF8DA2D6E708000F80561 /* Exceptions for "CartCopilot" folder in "CartCopilot" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 19BA8E702D6A904E0016823D /* CartCopilot */;
+		};
+/* End PBXFileSystemSynchronizedBuildFileExceptionSet section */
+
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		19BA8E732D6A904E0016823D /* CartCopilot */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				19EBF8DA2D6E708000F80561 /* Exceptions for "CartCopilot" folder in "CartCopilot" target */,
+			);
 			path = CartCopilot;
 			sourceTree = "<group>";
 		};
@@ -408,6 +421,8 @@
 				DEVELOPMENT_TEAM = V7HLP74XY3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CartCopilot/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -437,6 +452,8 @@
 				DEVELOPMENT_TEAM = V7HLP74XY3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = CartCopilot/Info.plist;
+				INFOPLIST_KEY_NSCameraUsageDescription = "We need camera access to scan barcodes";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;

@@ -93,7 +93,8 @@ struct ItemDetailView: View {
             ItemBasicInfoSection(
                 name: $name,
                 currentPrice: $currentPrice,
-                isEnabled: isFieldsEnabled
+                isEnabled: isFieldsEnabled,
+                item: item
             )
             
             ItemCategoryStoreSection(
@@ -123,9 +124,12 @@ struct ItemDetailView: View {
     private struct ItemBasicInfoSection: View {
         @Binding var name: String
         @Binding var currentPrice: Decimal?
+        @State private var showingBarcodeScanner = false
+        @State private var upcString = ""
         let isEnabled: Bool
         @FocusState private var isPriceFieldFocused: Bool
-        @State private var priceString = "" // Add this for string-based price input
+        @State private var priceString = ""
+        var item: Item?
         
         private var currencySymbol: String {
             let formatter = NumberFormatter()
@@ -143,14 +147,12 @@ struct ItemDetailView: View {
                     Text(currencySymbol)
                         .foregroundStyle(.secondary)
                     ZStack(alignment: .leading) {
-                        // Replace Decimal TextField with string-based TextField
                         TextField("", text: $priceString)
                             .keyboardType(.decimalPad)
                             .focused($isPriceFieldFocused)
                             .disabled(!isEnabled)
                             .foregroundColor(.primary)
                             .onChange(of: priceString) {
-                                // Convert string to Decimal when the user types
                                 if let decimal = Decimal(string: priceString) {
                                     currentPrice = decimal
                                 } else if priceString.isEmpty {
@@ -158,7 +160,6 @@ struct ItemDetailView: View {
                                 }
                             }
                             .onAppear {
-                                // Initialize priceString from currentPrice if it exists
                                 if let price = currentPrice {
                                     let formatter = NumberFormatter()
                                     formatter.numberStyle = .decimal
@@ -175,6 +176,35 @@ struct ItemDetailView: View {
                                 .foregroundColor(.gray)
                                 .allowsHitTesting(false)
                         }
+                    }
+                }
+                
+                HStack {
+                    TextField("UPC", text: $upcString)
+                        .disabled(!isEnabled)
+                        .onChange(of: upcString) {
+                            item?.upc = upcString.isEmpty ? nil : upcString
+                        }
+                        .onAppear {
+                            if let existingUPC = item?.upc {
+                                upcString = existingUPC
+                            }
+                        }
+                    
+                    if isEnabled {
+                        Button(action: {
+                            showingBarcodeScanner = true
+                        }) {
+                            Image(systemName: "barcode.viewfinder")
+                        }
+                        .buttonStyle(.borderless)
+                    }
+                }
+                .sheet(isPresented: $showingBarcodeScanner) {
+                    BarcodeScannerView { scannedCode in
+                        upcString = scannedCode
+                        item?.upc = scannedCode
+                        showingBarcodeScanner = false
                     }
                 }
             } header: {
