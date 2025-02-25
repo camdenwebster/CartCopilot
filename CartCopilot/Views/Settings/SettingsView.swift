@@ -7,14 +7,56 @@
 
 import SwiftUI
 import SwiftData
+import SafariServices
 
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedSection: SettingsSection? = .categories // Default selection
-    
+    @State private var showingSafariView = false
+    @State private var selectedURL: URL?
+
+    // Add external links
+    private let externalLinks: [String: ExternalLink] = [
+        "knowledgeBase": ExternalLink(
+            title: "Knowledge Base",
+            icon: "questionmark.circle.fill",
+            url: URL(string: "https://cartcopilot.app/help")!
+        ),
+        "support": ExternalLink(
+            title: "Support",
+            icon: "envelope.fill",
+            url: URL(string: "https://cartcopilot.app/support")!
+        ),
+        "roadmap": ExternalLink(
+            title: "Roadmap",
+            icon: "map",
+            url: URL(string: "https://cartcopilot.app/roadmap")!
+        ),
+        "rateUs": ExternalLink(
+            title: "Rate Us",
+            icon: "star.fill",
+            url: URL(string: "https://apps.apple.com/app/cartcopilot/id123456789")!
+        ),
+        "privacyPolicy": ExternalLink(
+            title: "Privacy Policy",
+            icon: "lock.fill",
+            url: URL(string: "https://cartcopilot.app/privacy")!
+        ),
+        "termsOfService": ExternalLink(
+            title: "Terms of Service",
+            icon: "doc.text.fill",
+            url: URL(string: "https://cartcopilot.app/tos")!
+        )
+    ]
+
     var body: some View {
         NavigationSplitView {
             Form {
+                Section("General") {
+                    Label("Apperance", systemImage: "paintbrush.fill")
+                    Label("Notifications", systemImage: "bell.fill")
+                    Label("Location Services", systemImage: "location.fill")
+                }
                 Section("Management") {
                     NavigationLink(value: SettingsSection.categories) {
                         Label("Categories", systemImage: "tag.fill")
@@ -25,13 +67,31 @@ struct SettingsView: View {
                     }
                 }
                 
-                Section("About") {
-                    NavigationLink(value: SettingsSection.version) {
-                        Label("Version", systemImage: "info.circle.fill")
-                    }
+                Section("Community & Support") {
+                    externalLinkButton(for: externalLinks["knowledgeBase"]!)
+                    externalLinkButton(for: externalLinks["support"]!)
+                    externalLinkButton(for: externalLinks["rateUs"]!)
                 }
+                
+                Section("About") {
+                    HStack {
+                        Label("Version", systemImage: "info.circle.fill")
+                        Spacer()
+                        Text("1.0.0")
+                    }
+                    externalLinkButton(for: externalLinks["roadmap"]!)
+
+                    externalLinkButton(for: externalLinks["privacyPolicy"]!)
+                    externalLinkButton(for: externalLinks["termsOfService"]!)
+                }
+
             }
             .navigationTitle("Settings")
+            .sheet(isPresented: $showingSafariView) {
+                if let url = selectedURL {
+                    SafariView(url: url)
+                }
+            }
         } detail: {
             if let selectedSection = selectedSection {
                 switch selectedSection {
@@ -39,24 +99,56 @@ struct SettingsView: View {
                     CategoriesView()
                 case .stores:
                     StoresView()
-                case .version:
-                    HStack {
-                        Label("Version", systemImage: "info.circle.fill")
-                        Spacer()
-                        Text("1.0.0")
-                    }
+                case .legal:
+                    Text("Terms of Service")
+                    Text("Privacy Policy")
                 }
             } else {
                 Text("Select a Section")
             }
         }
     }
+    
+    // Helper function to create external link buttons
+    private func externalLinkButton(for link: ExternalLink) -> some View {
+        Button {
+            selectedURL = link.url
+            showingSafariView = true
+        } label: {
+            HStack {
+                Label(link.title, systemImage: link.icon)
+                Spacer()
+                Image(systemName: "arrow.up.right.square")
+                    .font(.caption)
+                    .foregroundStyle(.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct ExternalLink {
+    let title: String
+    let icon: String
+    let url: URL
+}
+
+struct SafariView: UIViewControllerRepresentable {
+    let url: URL
+    
+    func makeUIViewController(context: Context) -> SFSafariViewController {
+        let safariViewController = SFSafariViewController(url: url)
+        return safariViewController
+    }
+    
+    func updateUIViewController(_ uiViewController: SFSafariViewController, context: Context) {}
 }
 
 enum SettingsSection: Hashable {
     case categories
     case stores
-    case version
+    case legal
 }
 
 struct CategoriesView: View {

@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import TelemetryDeck
 
 struct ShoppingTripListView: View {
     @Environment(\.modelContext) var modelContext
@@ -50,6 +51,7 @@ struct ShoppingTripListView: View {
             .navigationTitle("Shopping Trips")
             .toolbar {
                 Button {
+                    TelemetryDeck.signal("Trip.List.createNewTrip")
                     showingNewTrip = true
                 } label: {
                     Label("Add Trip", systemImage: "plus")

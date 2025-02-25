@@ -7,6 +7,7 @@
 
 import SwiftData
 import SwiftUI
+import TelemetryDeck
 
 @main
 struct CartCopilotApp: App {
@@ -14,6 +15,8 @@ struct CartCopilotApp: App {
     let container: ModelContainer
     
     init() {
+        let config = TelemetryDeck.Config(appID: "5D1FEA5B-29BB-4A0A-9BFA-977EC9A3EE98")
+        TelemetryDeck.initialize(config: config)
         do {
             // Initialize container with all model types
             // Note: Don't use array syntax for model types
