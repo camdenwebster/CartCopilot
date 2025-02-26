@@ -92,4 +92,4 @@ CartCopilot is designed with user privacy in mind. All shopping data is stored l
 GPL-3.0
 
 ## Contact
-contact@mothersound.dev
+[contact@mothersound.dev](mailto:contact@mothersound.dev)
