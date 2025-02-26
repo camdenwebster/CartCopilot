@@ -134,9 +134,32 @@ struct ItemDetailView: View {
             return formatter.currencySymbol
         }
         
+        // Added helper method to format price string with implicit decimal point
+        private func formattedPriceString(_ input: String) -> String {
+            // Filter out non-numeric characters
+            let numericString = input.filter { $0.isNumber }
+            
+            if numericString.isEmpty {
+                return ""
+            }
+            
+            // Convert to a Decimal amount (divide by 100 to place decimal point)
+            let amountValue = Decimal(string: numericString) ?? 0
+            let amount = amountValue / 100
+            
+            // Format with 2 decimal places
+            let formatter = NumberFormatter()
+            formatter.numberStyle = .decimal
+            formatter.minimumFractionDigits = 2
+            formatter.maximumFractionDigits = 2
+            
+            return formatter.string(from: NSDecimalNumber(decimal: amount)) ?? ""
+        }
+        
         var body: some View {
-            Section {
-                HStack(spacing: 0){
+            Section(header: Text("Item Details")) {
+                // Item field
+                HStack(spacing: 0) {
                     Text("Item")
                     Spacer()
                     TextField("Item Name", text: $name)
@@ -148,7 +171,8 @@ struct ItemDetailView: View {
                         .frame(maxWidth: 200, alignment: .trailing)
                 }
                 
-                HStack(spacing: 0){
+                // Brand field
+                HStack(spacing: 0) {
                     Text("Brand")
                     Spacer()
                     TextField("Brand Name", text: Binding(
@@ -163,26 +187,46 @@ struct ItemDetailView: View {
                         .frame(maxWidth: 200, alignment: .trailing)
                 }
                 
+                // Price field
                 HStack {
                     Text("Price")
-                        .frame(alignment: .leading)
                     Spacer()
                     HStack(spacing: 0) {
                         Text(currencySymbol)
                             .foregroundStyle(.secondary)
                         TextField("", text: $priceString)
                             .multilineTextAlignment(.trailing)
-                            .keyboardType(.decimalPad)
+                            .keyboardType(.numberPad)
                             .lineLimit(1)
                             .truncationMode(.tail)
                             .focused($isPriceFieldFocused)
                             .frame(minWidth: 60, maxWidth: 75, alignment: .trailing)
                             .disabled(!isEnabled)
                             .foregroundColor(isEnabled ? .primary : .secondary)
-                            .onChange(of: priceString) {
-                                if let decimal = Decimal(string: priceString) {
-                                    currentPrice = decimal
-                                } else if priceString.isEmpty {
+                            .onChange(of: priceString) { oldValue, newValue in
+                                // Filter and allow only numbers
+                                let filteredValue = newValue.filter { $0.isNumber }
+                                
+                                // If the user changed the string and it doesn't match our filtered value
+                                if newValue != filteredValue {
+                                    priceString = filteredValue
+                                }
+                                
+                                // Format for display with decimal point
+                                let formattedValue = formattedPriceString(filteredValue)
+                                
+                                // Only update the UI if we have a valid format and it's different
+                                if !formattedValue.isEmpty && formattedValue != priceString {
+                                    priceString = formattedValue
+                                }
+                                
+                                // Update the actual Decimal value for storage
+                                if !filteredValue.isEmpty {
+                                    let numericString = filteredValue
+                                    if let decimalValue = Decimal(string: numericString) {
+                                        currentPrice = decimalValue / 100
+                                    }
+                                } else {
                                     currentPrice = nil
                                 }
                             }
@@ -201,21 +245,19 @@ struct ItemDetailView: View {
                 }
                 .onAppear {
                     if let price = currentPrice {
-                        let formatter = NumberFormatter()
-                        formatter.numberStyle = .decimal
-                        formatter.minimumFractionDigits = 2
-                        formatter.maximumFractionDigits = 2
-                        if let str = formatter.string(from: NSDecimalNumber(decimal: price)) {
-                            priceString = str
-                        }
+                        // Convert to integer by multiplying by 100 and rounding properly
+                        let scaledValue = price * Decimal(100)
+                        let intValue = Int(NSDecimalNumber(decimal: scaledValue).rounding(accordingToBehavior: nil).intValue)
+                        priceString = formattedPriceString(String(intValue))
                     }
                 }
                 
+                // UPC field
                 HStack {
                     TextField("UPC", text: $upcString)
                         .disabled(!isEnabled)
-                        .onChange(of: upcString) {
-                            item?.upc = upcString.isEmpty ? nil : upcString
+                        .onChange(of: upcString) { oldValue, newValue in
+                            item?.upc = newValue.isEmpty ? nil : newValue
                         }
                         .onAppear {
                             if let existingUPC = item?.upc {
@@ -240,8 +282,6 @@ struct ItemDetailView: View {
                         showingBarcodeScanner = false
                     }
                 }
-            } header: {
-                Text("Item Details")
             }
         }
     }
@@ -336,10 +376,11 @@ struct ItemDetailView: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .navigationBarBackButtonHidden(!isPresentedAsSheet)
                 .onChange(of: selectedPhoto) { loadPhoto() }
-                .onChange(of: name) { _ in checkForChanges() }
-                .onChange(of: currentPrice) { _ in checkForChanges() }
-                .onChange(of: selectedCategory) { _ in checkForChanges() }
-                .onChange(of: preferredStore) { _ in checkForChanges() }
+                .onChange(of: selectedPhoto) { oldValue, newValue in loadPhoto() }
+                .onChange(of: name) { oldValue, newValue in checkForChanges() }
+                .onChange(of: currentPrice) { oldValue, newValue in checkForChanges() }
+                .onChange(of: selectedCategory) { oldValue, newValue in checkForChanges() }
+                .onChange(of: preferredStore) { oldValue, newValue in checkForChanges() }
                 .onAppear(perform: setupInitialValues)
                 .toolbar { toolbarContent }
                 .alert("Unsaved Changes", isPresented: $showingUnsavedChangesAlert) {
