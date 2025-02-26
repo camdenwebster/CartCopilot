@@ -19,6 +19,8 @@ struct ShoppingTripListView: View {
         locale.currency?.identifier ?? "USD"
     }
 
+    private let theme: Theme = DefaultTheme()
+
     var body: some View {
         NavigationSplitView {
             List(selection: $selectedTrip) {
@@ -28,19 +30,21 @@ struct ShoppingTripListView: View {
                         systemImage: "cart",
                         description: Text("Add a new shopping trip to get started")
                     )
+                    .foregroundStyle(theme.primaryText)
                 } else {
                     ForEach(trips) { trip in
                         NavigationLink(value: trip) {
                             HStack {
                                 VStack(alignment: .leading) {
                                     Text(trip.store.name)
+                                        .foregroundStyle(theme.primaryText)
                                     Text(trip.date, style: .date)
                                         .font(.caption)
-                                        .foregroundColor(.secondary)
+                                        .foregroundStyle(theme.secondaryAccent)
                                 }
                                 Spacer()
                                 Text(trip.total.formatted(.currency(code: currencyCode)))
-                                    .foregroundStyle(.secondary)
+                                    .foregroundStyle(theme.accent)
                             }
                         }
                     }
@@ -48,12 +52,16 @@ struct ShoppingTripListView: View {
                 }
             }
             .navigationTitle("Shopping Trips")
+            .tint(theme.secondaryAccent)
+            .scrollContentBackground(.hidden)
+            .background(theme.primaryBackground)
             .toolbar {
                 Button {
                     TelemetryManager.shared.trackTabSelected(tab: "create-trip")
                     showingNewTrip = true
                 } label: {
                     Label("Add Trip", systemImage: "plus")
+                        .foregroundStyle(theme.secondaryAccent)
                 }
             }
             .sheet(isPresented: $showingNewTrip) {
@@ -64,6 +72,7 @@ struct ShoppingTripListView: View {
                 ShoppingTripDetailView(trip: trip)
             } else {
                 Text("Select a Trip")
+                    .foregroundStyle(theme.primaryText)
             }
         }
         .onAppear {

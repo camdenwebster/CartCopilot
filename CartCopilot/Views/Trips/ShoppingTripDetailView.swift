@@ -17,6 +17,8 @@ struct ShoppingTripDetailView: View {
     @State private var selectedShoppingItem: ShoppingItem?
     @State private var showingItemSelector = false
 
+    private let theme: Theme = DefaultTheme()
+
     private var currencyCode: String {
         locale.currency?.identifier ?? "USD"
     }
@@ -160,16 +162,17 @@ struct ShoppingTripDetailView: View {
                                     Text(categoryTotal.category.emoji ?? "⚪\u{fe0f}")
                                     Text(categoryTotal.category.name)
                                         .font(.subheadline)
-                                        .foregroundStyle(.secondary)
+                                        .foregroundStyle(theme.secondaryText)
                                     Text(categoryTotal.total.formatted(.currency(code: currencyCode)))
                                         .font(.headline)
+                                        .foregroundStyle(theme.primaryText)
                                 }
                                 .frame(minWidth: 100)
                             }
                         }
                         .padding()
                     }
-                    .background(.regularMaterial)
+                    .background(theme.secondaryBackground)
                 }
                 
                 // Your existing List

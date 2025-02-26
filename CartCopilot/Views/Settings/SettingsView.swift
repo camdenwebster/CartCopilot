@@ -49,21 +49,29 @@ struct SettingsView: View {
         )
     ]
 
+    // Add theme property
+    private let theme: Theme = DefaultTheme()
+
     var body: some View {
         NavigationSplitView {
             Form {
                 Section("General") {
-                    Label("Apperance", systemImage: "paintbrush.fill")
+                    Label("Appearance", systemImage: "paintbrush.fill")
+                        .foregroundStyle( theme.primaryText)
                     Label("Notifications", systemImage: "bell.fill")
+                        .foregroundStyle(theme.primaryText)
                     Label("Location Services", systemImage: "location.fill")
+                        .foregroundStyle(theme.primaryText)
                 }
                 Section("Management") {
                     NavigationLink(value: SettingsSection.categories) {
                         Label("Categories", systemImage: "tag.fill")
+                            .foregroundStyle(theme.primaryText)
                     }
                     
                     NavigationLink(value: SettingsSection.stores) {
                         Label("Stores", systemImage: "storefront.fill")
+                            .foregroundStyle(theme.primaryText, theme.accent)
                     }
                 }
                 
@@ -76,6 +84,7 @@ struct SettingsView: View {
                 Section("About") {
                     HStack {
                         Label("Version", systemImage: "info.circle.fill")
+                            .foregroundStyle(theme.primaryText)
                         Spacer()
                         Text("1.0.0")
                             .foregroundColor(.secondary)
@@ -87,6 +96,10 @@ struct SettingsView: View {
 
             }
             .navigationTitle("Settings")
+            .tint(theme.accent)
+            .foregroundStyle(theme.primaryText)
+            .scrollContentBackground(.hidden)
+            .background(theme.primaryBackground)
             .navigationDestination(for: SettingsSection.self) { section in
                 switch section {
                 case .categories:
@@ -136,10 +149,11 @@ struct SettingsView: View {
         } label: {
             HStack {
                 Label(link.title, systemImage: link.icon)
+                    .foregroundStyle(theme.primaryText)
                 Spacer()
                 Image(systemName: "arrow.up.right.square")
                     .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .foregroundStyle(theme.accent)
             }
             .contentShape(Rectangle())
         }
