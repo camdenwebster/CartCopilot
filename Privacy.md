@@ -70,5 +70,4 @@ CartCopilot is not intended for use by children under 13. We do not knowingly co
 We may update this Privacy Policy from time to time. We will notify you of any changes by posting the new Privacy Policy in the app and updating the "Last updated" date.
 
 ## Contact Us
-
-                                                                                                                              If you have questions about this Privacy Policy, please contact us at contact@mothersound.dev.
+If you have questions about this Privacy Policy, please contact us at [contact@mothersound.dev](mailto:contact@mothersound.dev).
