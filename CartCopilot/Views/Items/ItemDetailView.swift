@@ -163,48 +163,50 @@ struct ItemDetailView: View {
                         .frame(maxWidth: 200, alignment: .trailing)
                 }
                 
-                HStack(spacing: 2) {
-
-                    ZStack(alignment: .trailing) {
-                        HStack(spacing: 0) {
-                            Text("Price")
-                            Spacer()
-                            Text(currencySymbol)
-                                .foregroundStyle(.secondary)
-                                .frame(alignment: .trailing)
-                            TextField("", text: $priceString)
-                                .multilineTextAlignment(.trailing)
-                                .keyboardType(.decimalPad)
-                                .lineLimit(1)
-                                .truncationMode(.tail)
-                                .focused($isPriceFieldFocused)
-                                .frame(maxWidth: 40, alignment: .trailing)
-                                .disabled(!isEnabled)
-                                .foregroundColor(isEnabled ? .primary : .secondary)
-                                .onChange(of: priceString) {
-                                    if let decimal = Decimal(string: priceString) {
-                                        currentPrice = decimal
-                                    } else if priceString.isEmpty {
-                                        currentPrice = nil
-                                    }
+                HStack {
+                    Text("Price")
+                        .frame(alignment: .leading)
+                    Spacer()
+                    HStack(spacing: 0) {
+                        Text(currencySymbol)
+                            .foregroundStyle(.secondary)
+                        TextField("", text: $priceString)
+                            .multilineTextAlignment(.trailing)
+                            .keyboardType(.decimalPad)
+                            .lineLimit(1)
+                            .truncationMode(.tail)
+                            .focused($isPriceFieldFocused)
+                            .frame(minWidth: 60, maxWidth: 75, alignment: .trailing)
+                            .disabled(!isEnabled)
+                            .foregroundColor(isEnabled ? .primary : .secondary)
+                            .onChange(of: priceString) {
+                                if let decimal = Decimal(string: priceString) {
+                                    currentPrice = decimal
+                                } else if priceString.isEmpty {
+                                    currentPrice = nil
                                 }
                             }
-                            .onAppear {
-                                if let price = currentPrice {
-                                    let formatter = NumberFormatter()
-                                    formatter.numberStyle = .decimal
-                                    formatter.minimumFractionDigits = 2
-                                    formatter.maximumFractionDigits = 2
-                                    if let str = formatter.string(from: NSDecimalNumber(decimal: price)) {
-                                        priceString = str
+                            .overlay(
+                                Group {
+                                    if priceString.isEmpty && !isPriceFieldFocused {
+                                        Text("0.00")
+                                            .foregroundColor(.gray)
+                                            .allowsHitTesting(false)
+                                            .frame(maxWidth: .infinity, alignment: .trailing)
                                     }
                                 }
-                            }
-                        
-                        if priceString.isEmpty && !isPriceFieldFocused {
-                            Text("0.00")
-                                .foregroundColor(.gray)
-                                .allowsHitTesting(false)
+                            )
+                    }
+                    .frame(maxWidth: 120, alignment: .trailing)
+                }
+                .onAppear {
+                    if let price = currentPrice {
+                        let formatter = NumberFormatter()
+                        formatter.numberStyle = .decimal
+                        formatter.minimumFractionDigits = 2
+                        formatter.maximumFractionDigits = 2
+                        if let str = formatter.string(from: NSDecimalNumber(decimal: price)) {
+                            priceString = str
                         }
                     }
                 }
