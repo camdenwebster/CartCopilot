@@ -164,21 +164,23 @@ struct ItemDetailView: View {
                 }
                 
                 HStack(spacing: 2) {
-                    Text(currencySymbol)
-                        .foregroundStyle(.secondary)
-                    ZStack(alignment: .leading) {
+
+                    ZStack(alignment: .trailing) {
                         HStack(spacing: 0) {
                             Text("Price")
                             Spacer()
+                            Text(currencySymbol)
+                                .foregroundStyle(.secondary)
+                                .frame(alignment: .trailing)
                             TextField("", text: $priceString)
                                 .multilineTextAlignment(.trailing)
                                 .keyboardType(.decimalPad)
                                 .lineLimit(1)
                                 .truncationMode(.tail)
                                 .focused($isPriceFieldFocused)
-                                .frame(maxWidth: 200, alignment: .trailing)
+                                .frame(maxWidth: 40, alignment: .trailing)
                                 .disabled(!isEnabled)
-                                .foregroundColor(.primary)
+                                .foregroundColor(isEnabled ? .primary : .secondary)
                                 .onChange(of: priceString) {
                                     if let decimal = Decimal(string: priceString) {
                                         currentPrice = decimal
