@@ -191,11 +191,11 @@ struct ShoppingTripDetailView: View {
                             } label: {
                                 HStack {
                                     Text(shoppingItem.item.category.emoji ?? "⚪\u{fe0f}")
-                                    VStack(alignment: .leading) {
-                                        Text(shoppingItem.item.name)
-                                        Text(shoppingItem.item.category.name)
+                                    Text(shoppingItem.item.name)
+                                    if let brand = shoppingItem.item.brand {
+                                        Text("by \(brand)")
                                             .font(.caption)
-                                            .foregroundStyle(.secondary)
+                                            .foregroundColor(.secondary)
                                     }
                                     Spacer()
                                     VStack(alignment: .trailing) {

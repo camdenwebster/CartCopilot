@@ -7,7 +7,6 @@
 
 import SwiftData
 import SwiftUI
-import TelemetryDeck
 
 struct ShoppingTripListView: View {
     @Environment(\.modelContext) var modelContext

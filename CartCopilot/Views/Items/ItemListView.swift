@@ -117,15 +117,21 @@ struct ItemRow: View {
     var body: some View {
         HStack {
             VStack(alignment: .leading) {
-                Text(item.name)
-                
-                if let store = item.preferredStore {
-                    Text(store.name)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                HStack {
+                    Text(item.name)
+                    if let brand = item.brand {
+                        Text("by \(brand)")
+                            .foregroundColor(.secondary)
+                            .font(.caption)
+                    }
                 }
             }
             Spacer()
+            if let store = item.preferredStore {
+                Text(store.name)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
             Text(item.currentPrice, format: .currency(code: "USD"))
                 .foregroundStyle(.secondary)
         }
