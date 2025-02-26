@@ -1,0 +1,25 @@
+{
+  "configurations" : [
+    {
+      "id" : "B82B30EC-D925-4F40-B429-A73365D0B978",
+      "name" : "Test Scheme Action",
+      "options" : {
+
+      }
+    }
+  ],
+  "defaultOptions" : {
+
+  },
+  "testTargets" : [
+    {
+      "parallelizable" : true,
+      "target" : {
+        "containerPath" : "container:CartCopilot.xcodeproj",
+        "identifier" : "19BA8E8A2D6A90500016823D",
+        "name" : "CartCopilotUITests"
+      }
+    }
+  ],
+  "version" : 1
+}

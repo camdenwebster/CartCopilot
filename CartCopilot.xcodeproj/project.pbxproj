@@ -10,6 +10,7 @@
 		19EBF8852D6E3A0000F80561 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 19EBF8842D6E3A0000F80561 /* TelemetryDeck */; };
 		19EBF8DC2D6EB30100F80561 /* Privacy.md in Resources */ = {isa = PBXBuildFile; fileRef = 19EBF8DB2D6EB2F700F80561 /* Privacy.md */; };
 		19EBF8DE2D6EB3A700F80561 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 19EBF8DD2D6EB3A700F80561 /* README.md */; };
+		19EBF8EA2D6F76D000F80561 /* CartCopilotUITests.xctestplan in Resources */ = {isa = PBXBuildFile; fileRef = 19EBF8E82D6F76D000F80561 /* CartCopilotUITests.xctestplan */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -35,6 +36,7 @@
 		19BA8E8B2D6A90500016823D /* CartCopilotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartCopilotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19EBF8DB2D6EB2F700F80561 /* Privacy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Privacy.md; sourceTree = "<group>"; };
 		19EBF8DD2D6EB3A700F80561 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
+		19EBF8E82D6F76D000F80561 /* CartCopilotUITests.xctestplan */ = {isa = PBXFileReference; lastKnownFileType = text; path = CartCopilotUITests.xctestplan; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -97,6 +99,7 @@
 		19BA8E682D6A904E0016823D = {
 			isa = PBXGroup;
 			children = (
+				19EBF8E92D6F76D000F80561 /* TestPlans */,
 				19EBF8DD2D6EB3A700F80561 /* README.md */,
 				19EBF8DB2D6EB2F700F80561 /* Privacy.md */,
 				19BA8E732D6A904E0016823D /* CartCopilot */,
@@ -114,6 +117,14 @@
 				19BA8E8B2D6A90500016823D /* CartCopilotUITests.xctest */,
 			);
 			name = Products;
+			sourceTree = "<group>";
+		};
+		19EBF8E92D6F76D000F80561 /* TestPlans */ = {
+			isa = PBXGroup;
+			children = (
+				19EBF8E82D6F76D000F80561 /* CartCopilotUITests.xctestplan */,
+			);
+			path = TestPlans;
 			sourceTree = "<group>";
 		};
 /* End PBXGroup section */
@@ -240,6 +251,7 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				19EBF8EA2D6F76D000F80561 /* CartCopilotUITests.xctestplan in Resources */,
 				19EBF8DC2D6EB30100F80561 /* Privacy.md in Resources */,
 				19EBF8DE2D6EB3A700F80561 /* README.md in Resources */,
 			);
@@ -423,6 +435,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CartCopilot/Preview Content\"";
@@ -441,8 +454,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mothersound.CartCopilot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mothersound.cartcopilot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
@@ -454,6 +468,7 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
 				CURRENT_PROJECT_VERSION = 1;
 				DEVELOPMENT_ASSET_PATHS = "\"CartCopilot/Preview Content\"";
@@ -472,8 +487,9 @@
 					"@executable_path/Frameworks",
 				);
 				MARKETING_VERSION = 1.0;
-				PRODUCT_BUNDLE_IDENTIFIER = com.mothersound.CartCopilot;
+				PRODUCT_BUNDLE_IDENTIFIER = com.mothersound.cartcopilot;
 				PRODUCT_NAME = "$(TARGET_NAME)";
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 				TARGETED_DEVICE_FAMILY = "1,2";
