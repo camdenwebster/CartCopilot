@@ -8,6 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		19EBF8852D6E3A0000F80561 /* TelemetryDeck in Frameworks */ = {isa = PBXBuildFile; productRef = 19EBF8842D6E3A0000F80561 /* TelemetryDeck */; };
+		19EBF8DC2D6EB30100F80561 /* Privacy.md in Resources */ = {isa = PBXBuildFile; fileRef = 19EBF8DB2D6EB2F700F80561 /* Privacy.md */; };
+		19EBF8DE2D6EB3A700F80561 /* README.md in Resources */ = {isa = PBXBuildFile; fileRef = 19EBF8DD2D6EB3A700F80561 /* README.md */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -31,6 +33,8 @@
 		19BA8E712D6A904E0016823D /* CartCopilot.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = CartCopilot.app; sourceTree = BUILT_PRODUCTS_DIR; };
 		19BA8E812D6A90500016823D /* CartCopilotTests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartCopilotTests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
 		19BA8E8B2D6A90500016823D /* CartCopilotUITests.xctest */ = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; includeInIndex = 0; path = CartCopilotUITests.xctest; sourceTree = BUILT_PRODUCTS_DIR; };
+		19EBF8DB2D6EB2F700F80561 /* Privacy.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = Privacy.md; sourceTree = "<group>"; };
+		19EBF8DD2D6EB3A700F80561 /* README.md */ = {isa = PBXFileReference; lastKnownFileType = net.daringfireball.markdown; path = README.md; sourceTree = "<group>"; };
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
@@ -93,6 +97,8 @@
 		19BA8E682D6A904E0016823D = {
 			isa = PBXGroup;
 			children = (
+				19EBF8DD2D6EB3A700F80561 /* README.md */,
+				19EBF8DB2D6EB2F700F80561 /* Privacy.md */,
 				19BA8E732D6A904E0016823D /* CartCopilot */,
 				19BA8E842D6A90500016823D /* CartCopilotTests */,
 				19BA8E8E2D6A90500016823D /* CartCopilotUITests */,
@@ -234,6 +240,8 @@
 			isa = PBXResourcesBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				19EBF8DC2D6EB30100F80561 /* Privacy.md in Resources */,
+				19EBF8DE2D6EB3A700F80561 /* README.md in Resources */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
