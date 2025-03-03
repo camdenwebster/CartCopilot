@@ -9,6 +9,7 @@ import SwiftUI
 import SwiftData
 import SafariServices
 
+// MARK: - Main Settings Body
 struct SettingsView: View {
     @Environment(\.modelContext) private var modelContext
     @State private var selectedSection: SettingsSection? = .categories // Default selection
@@ -48,7 +49,6 @@ struct SettingsView: View {
             url: URL(string: "https://mothersound.dev")!
         )
     ]
-
     var body: some View {
         NavigationSplitView {
             Form {
@@ -153,6 +153,7 @@ struct ExternalLink {
     let url: URL
 }
 
+// MARK: - SafariView
 struct SafariView: UIViewControllerRepresentable {
     let url: URL
     @Environment(\.presentationMode) var presentationMode
@@ -203,6 +204,7 @@ enum SettingsSection: Hashable {
     case legal
 }
 
+// MARK: - CategoriesView
 struct CategoriesView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [
@@ -260,6 +262,7 @@ struct CategoriesView: View {
     }
 }
 
+// MARK: - StoresView
 struct StoresView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: [
@@ -319,6 +322,7 @@ struct StoresView: View {
     }
 }
 
+// MARK: - CategoryFormView
 struct CategoryFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
@@ -431,6 +435,7 @@ struct CategoryFormView: View {
     }
 }
 
+// MARK: - StoreFormView
 struct StoreFormView: View {
     @Environment(\.modelContext) private var modelContext
     @Environment(\.dismiss) private var dismiss
