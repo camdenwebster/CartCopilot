@@ -90,12 +90,6 @@ class ShoppingTripUITests: XCTestCase {
 
         // When creating a new trip
         page.tapAddTripButton()
-        
-//        let collectionViewsQuery = XCUIApplication().collectionViews
-//        let selectAStoreAmazonButton = collectionViewsQuery/*@START_MENU_TOKEN@*/.buttons["Select a Store, Amazon"]/*[[".cells.buttons[\"Select a Store, Amazon\"]",".buttons[\"Select a Store, Amazon\"]"],[[[-1,1],[-1,0]]],[0]]@END_MENU_TOKEN@*/
-//        selectAStoreAmazonButton.tap()
-//        selectAStoreAmazonButton.tap()
-//        collectionViewsQuery.buttons["Instacart"].tap()
                 
         // And selecting Aldi as the store
         page.selectStore("Aldi")
@@ -106,6 +100,3 @@ class ShoppingTripUITests: XCTestCase {
     }
 
 }
-
-// End of class implementation
-// End of file. No additional code.
